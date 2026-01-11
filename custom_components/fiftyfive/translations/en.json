@@ -19,10 +19,12 @@
     },
     "selector": {
         "country": {
-            "belux": "Belgium/Luxemburg",
-            "de": "Germany",
-            "fr": "France",
-            "nl": "Netherlands"
+            "options": {
+                "belux": "Belgium/Luxemburg",
+                "de": "Germany",
+                "fr": "France",
+                "nl": "Netherlands"
+            }
         }
     },
     "entity": {
@@ -48,11 +50,11 @@
         "start_charge_session": {
             "name": "Start a charge session",
             "description": "Starts a charging session with a given card",
-            "target": {
-                "name": "Charger",
-                "description": "The charger on which to start a session"
-            },
             "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger on which to start a session"
+                },
                 "card": {
                     "name": "Card RFID",
                     "description": "RFID of the charge card"
@@ -62,9 +64,11 @@
         "stop_charge_session": {
             "name": "Stop a charge session",
             "description": "Stops a charging session",
-            "target": {
-                "name": "Charger",
-                "description": "The charger on which to stop the active session"
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger on which to stop the active session"
+                }
             }
         }
     }
