@@ -9,8 +9,8 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Crazy-Duck/home-assistant-fiftyfive/issues",
-  "version": "0.1.0",
   "requirements": [
     "fiftyfive>=0.0.1"
-  ]
+  ],
+  "version": "0.1.0"
 }
