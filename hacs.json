@@ -1,5 +1,6 @@
 {
     "name": "50five",
     "homeassistant": "2026.1.0",
-    "hacs": "2.0.5"
+    "hacs": "2.0.5",
+    "country": ["BE", "DE", "FR", "LU", "NL"]
 }
