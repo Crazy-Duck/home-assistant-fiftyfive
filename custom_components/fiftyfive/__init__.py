@@ -7,7 +7,6 @@ https://github.com/Crazy-Duck/home-assistant-fiftyfive
 
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME, Platform
