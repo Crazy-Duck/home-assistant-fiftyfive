@@ -1,0 +1,71 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "If you need help with the configuration have a look here: https://github.com/Crazy-Duck/home-assistant-fiftyfive",
+                "data": {
+                    "username": "Username",
+                    "password": "Password",
+                    "country": "Market"
+                }
+            }
+        },
+        "error": {
+            "auth": "Invalid credentials/market."
+        },
+        "abort": {
+            "already_configured": "This entry is already configured."
+        }
+    },
+    "selector": {
+        "country": {
+            "belux": "Belgium/Luxemburg",
+            "de": "Germany",
+            "fr": "France",
+            "nl": "Netherlands"
+        }
+    },
+    "entity": {
+        "sensor": {
+            "power_draw": {
+                "name": "Power draw"
+            },
+            "transaction_energy_delivered": {
+                "name": "Energy delivered during transaction"
+            },
+            "transaction_duration": {
+                "name": "Transaction duration"
+            },
+            "transaction_card": {
+                "name": "Card in use"
+            },
+            "status": {
+                "name": "Charger status"
+            }
+        }
+    },
+    "services": {
+        "start_charge_session": {
+            "name": "Start a charge session",
+            "description": "Starts a charging session with a given card",
+            "target": {
+                "name": "Charger",
+                "description": "The charger on which to start a session"
+            },
+            "fields": {
+                "card": {
+                    "name": "Card RFID",
+                    "description": "RFID of the charge card"
+                }
+            }
+        },
+        "stop_charge_session": {
+            "name": "Stop a charge session",
+            "description": "Stops a charging session",
+            "target": {
+                "name": "Charger",
+                "description": "The charger on which to stop the active session"
+            }
+        }
+    }
+}

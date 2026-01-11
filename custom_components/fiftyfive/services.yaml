@@ -1,0 +1,19 @@
+start_charge_session:
+  name: Start a charge session
+  description: Starts a charging session with a given card.
+  target:
+    device:
+      integration: 50five
+  fields:
+    card:
+      name: Card ID
+      description: Identifier of the charge card
+      required: True
+      selector:
+        text:
+stop_charge_session:
+  name: Stop a charge session
+  description: Stops the charging session on the device.
+  target:
+    device:
+      integration: 50five
