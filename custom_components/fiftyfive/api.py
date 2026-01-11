@@ -54,10 +54,7 @@ class FiftyfiveApiClient:
     ) -> None:
         """Sample API Client."""
         self._api = Api(
-            session=session,
-            email=username,
-            password=password,
-            market=market
+            session=session, email=username, password=password, market=market
         )
 
     async def async_get_data(self) -> Any:
@@ -67,37 +64,40 @@ class FiftyfiveApiClient:
             msg = "Invalid credentials"
             raise FiftyfiveApiClientAuthenticationError(msg)
 
-        details = await self._api.make_requests([
-            Overview(network["IDX"])
-            for network in networks[0]
-        ])
+        details = await self._api.make_requests(
+            [Overview(network["IDX"]) for network in networks[0]]
+        )
 
-        return [c|d for c,d in zip(networks[0], details[0], strict=True)]
-
+        return [c | d for c, d in zip(networks[0], details[0], strict=True)]
 
     async def async_start(self, charger: str, card_id: str) -> Any:
         """Start charge session."""
-        clients = await self._api.make_requests([
-            ClientSearch(recharge_spot_id=charger, name="")
-        ])
+        clients = await self._api.make_requests(
+            [ClientSearch(recharge_spot_id=charger, name="")]
+        )
 
-        card_lists = await self._api.make_requests([
-            CardSearch(recharge_spot_id=charger, customer_id=client["id"])
-            for client in clients[0]
-        ])
+        card_lists = await self._api.make_requests(
+            [
+                CardSearch(recharge_spot_id=charger, customer_id=client["id"])
+                for client in clients[0]
+            ]
+        )
 
         for i, card_list in enumerate(card_lists):
             if any(card["text"] == card_id for card in card_list):
-                return await self._api.make_requests([Start(
-                    channel=Channel(recharge_spot_id=charger, channel_id="1"),
-                    customer_id=clients[0][i]["id"],
-                    card_id=card_id
-                )])
+                return await self._api.make_requests(
+                    [
+                        Start(
+                            channel=Channel(recharge_spot_id=charger, channel_id="1"),
+                            customer_id=clients[0][i]["id"],
+                            card_id=card_id,
+                        )
+                    ]
+                )
         raise FiftyfiveApiInvalidCardError
 
     async def async_stop(self, charger: str) -> Any:
         """Stop a charge session."""
-        return await self._api.make_requests([
-            Stop(channel=Channel(recharge_spot_id=charger, channel_id="1"))
-        ])
-
+        return await self._api.make_requests(
+            [Stop(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        )

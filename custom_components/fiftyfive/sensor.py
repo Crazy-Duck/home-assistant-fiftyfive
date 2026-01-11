@@ -24,11 +24,13 @@ if TYPE_CHECKING:
     from .coordinator import FiftyfiveDataUpdateCoordinator
     from .data import FiftyfiveConfigEntry
 
+
 @dataclass(frozen=True, kw_only=True)
 class FiftyfiveSensorEntityDescription(SensorEntityDescription):
     """Class describing 50five sensor entities."""
 
     value_fn: Callable
+
 
 def hm_to_m(value: str) -> int:
     """Convert hh:mm duration into minutes."""
@@ -45,7 +47,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda network: network["MOM_POWER_KW"] or 0
+        value_fn=lambda network: network["MOM_POWER_KW"] or 0,
     ),
     FiftyfiveSensorEntityDescription(
         key="transaction_energy_delivered",
@@ -53,7 +55,7 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda network: network["TRANS_ENERGY_DELIVERED_KWH"] or 0
+        value_fn=lambda network: network["TRANS_ENERGY_DELIVERED_KWH"] or 0,
     ),
     FiftyfiveSensorEntityDescription(
         key="transaction_duration",
@@ -61,17 +63,17 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda network: hm_to_m(network["TRANSACTION_TIME_H_M"])
+        value_fn=lambda network: hm_to_m(network["TRANSACTION_TIME_H_M"]),
     ),
     FiftyfiveSensorEntityDescription(
         key="transaction_card",
         translation_key="transaction_card",
-        value_fn=lambda network: network["CARDID"]
+        value_fn=lambda network: network["CARDID"],
     ),
     FiftyfiveSensorEntityDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda network: network["NOTIFICATION"]
+        value_fn=lambda network: network["NOTIFICATION"],
     ),
 )
 
@@ -86,7 +88,7 @@ async def async_setup_entry(
         FiftyfiveChargerSensor(
             coordinator=entry.runtime_data.coordinator,
             entity_description=entity_description,
-            idx=network["IDX"]
+            idx=network["IDX"],
         )
         for entity_description in ENTITY_DESCRIPTIONS
         for network in entry.runtime_data.coordinator.data

@@ -63,10 +63,8 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     ),
                     vol.Required(CONF_COUNTRY): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[m.value for m in Market]
-                        )
-                    )
+                        selector.SelectSelectorConfig(options=[m.value for m in Market])
+                    ),
                 },
             ),
             errors=_errors,

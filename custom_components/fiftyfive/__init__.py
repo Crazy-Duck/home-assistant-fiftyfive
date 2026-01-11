@@ -102,14 +102,10 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
                 LOGGER.warning("No config entry found for charger %s", idx)
 
     hass.services.async_register(
-        DOMAIN,
-        "start_charge_session",
-        handle_start_charge_session
+        DOMAIN, "start_charge_session", handle_start_charge_session
     )
     hass.services.async_register(
-        DOMAIN,
-        "stop_charge_session",
-        handle_stop_charge_session
+        DOMAIN, "stop_charge_session", handle_stop_charge_session
     )
 
     return True
