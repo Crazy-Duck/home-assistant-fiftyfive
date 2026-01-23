@@ -68,7 +68,7 @@ class FiftyfiveApiClient:
             [Overview(network["IDX"]) for network in networks[0]]
         )
 
-        return [c | d for c, d in zip(networks[0], details[0], strict=True)]
+        return [c | d[0] for c, d in zip(networks[0], details, strict=True)]
 
     async def async_start(self, charger: str, card_id: str) -> Any:
         """Start charge session."""

@@ -42,3 +42,9 @@ devices and sensors for each discovered charger.
 50five's API only updates transaction data every 15m, so take this into account
 when using this integration. Charger status takes about 10-15s to change after
 starting/stopping a session.
+
+# Channel support
+
+I do not have a charger with multiple channels, nor do I have any idea how the
+api behaves in case there are multiple channels. If you have multiple channels
+on your charger, please open an issue so we can figure out if anything breaks.
