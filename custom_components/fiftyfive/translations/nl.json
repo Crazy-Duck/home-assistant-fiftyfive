@@ -1,0 +1,76 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Voor hulp bij de configuratie: https://github.com/Crazy-Duck/home-assistant-fiftyfive",
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Paswoord",
+                    "country": "Markt"
+                }
+            }
+        },
+        "error": {
+            "auth": "Ongeldige inloggegevens/markt."
+        },
+        "abort": {
+            "already_configured": "Deze combinatie is al configureerd."
+        }
+    },
+    "selector": {
+        "country": {
+            "options": {
+                "belux": "België/Luxemburg",
+                "de": "Duitsland",
+                "fr": "Frankrijk",
+                "nl": "Nederland",
+                "uk": "Verenigd Koninkrijk"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "power_draw": {
+                "name": "Stroomverbruik"
+            },
+            "transaction_energy_delivered": {
+                "name": "Energie geleverd tijdens transactie"
+            },
+            "transaction_duration": {
+                "name": "Transactie duur"
+            },
+            "transaction_card": {
+                "name": "Laadkaart in gebruik"
+            },
+            "status": {
+                "name": "Lader status"
+            }
+        }
+    },
+    "services": {
+        "start_charge_session": {
+            "name": "Start een laad sessie",
+            "description": "Start een laad sessie met de gegeven laadkaart",
+            "fields": {
+                "device": {
+                    "name": "Laadpaal",
+                    "description": "De laadpaal waarop een sessie gestart moet worden"
+                },
+                "card": {
+                    "name": "Laadkaart RFID",
+                    "description": "RFID van de laadkaart"
+                }
+            }
+        },
+        "stop_charge_session": {
+            "name": "Stop een laad sessie",
+            "description": "Stopt een laad sessie",
+            "fields": {
+                "device": {
+                    "name": "Laadpaal",
+                    "description": "De laadpaal waarop een sessie gestopt moet worden"
+                }
+            }
+        }
+    }
+}
