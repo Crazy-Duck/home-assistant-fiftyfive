@@ -8,7 +8,7 @@ start_charge_session:
       required: True
       selector:
         device:
-          integration: 50five
+          integration: fiftyfive
     card:
       name: Card ID
       description: Identifier of the charge card
@@ -25,4 +25,4 @@ stop_charge_session:
       required: True
       selector:
         device:
-          integration: 50five
+          integration: fiftyfive
