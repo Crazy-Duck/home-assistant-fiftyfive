@@ -1,0 +1,6 @@
+{
+    "services": {
+        "start_charge_session": "mdi:battery-charging",
+        "stop_charge_session": "mdi:battery-minus-variant"
+    }
+}
