@@ -1,0 +1,76 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Si vous avez besoin d'aide pour la configuration, rendez vous ici: https://github.com/Crazy-Duck/home-assistant-fiftyfive",
+                "data": {
+                    "username": "Nom d'utilisateur",
+                    "password": "Mot de passe",
+                    "country": "Région"
+                }
+            }
+        },
+        "error": {
+            "auth": "Erreur sur l'identifiant ou la région."
+        },
+        "abort": {
+            "already_configured": "Cette combinaison est déjà configurée."
+        }
+    },
+    "selector": {
+        "country": {
+            "options": {
+                "belux": "Belgique/Luxembourg",
+                "de": "Allemagne",
+                "fr": "France",
+                "nl": "Pays-Bas",
+                "uk": "Royaume-Uni"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "power_draw": {
+                "name": "Puissance absorbée"
+            },
+            "transaction_energy_delivered": {
+                "name": "Énergie délivrée lors de la recharge"
+            },
+            "transaction_duration": {
+                "name": "Durée de la recharge"
+            },
+            "transaction_card": {
+                "name": "Carte utilisée"
+            },
+            "status": {
+                "name": "Etat de la borne"
+            }
+        }
+    },
+    "services": {
+        "start_charge_session": {
+            "name": "Démarrer une recharge",
+            "description": "Démarrer une recharge avec une carte",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "Borne sur laquelle lancer la recharge"
+                },
+                "card": {
+                    "name": "Card RFID",
+                    "description": "Carte RFID"
+                }
+            }
+        },
+        "stop_charge_session": {
+            "name": "Arrêter la recharge",
+            "description": "Arrêter une recharge",
+            "fields": {
+                "device": {
+                    "name": "Borne",
+                    "description": "Borne sur laquelle arrêter la recharge"
+                }
+            }
+        }
+    }
+}
