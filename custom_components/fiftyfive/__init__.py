@@ -36,7 +36,7 @@ PLATFORMS: list[Platform] = [
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the integration (global)."""
 
-    async def find_charger_idx(device_id: str) -> str|None:
+    async def find_charger_idx(device_id: str) -> str | None:
         """Find charger idx based on device id."""
         device_registry = dr.async_get(hass)
 
