@@ -60,7 +60,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
             LOGGER.error("No device selected for stop_charge_session")
             return
 
-        idx = find_charger_idx(device_id)
+        idx = await find_charger_idx(device_id)
 
         for entry in hass.config_entries.async_entries(DOMAIN):
             networks = entry.runtime_data.coordinator.data
@@ -85,7 +85,7 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
             LOGGER.error("No card selected for start_charge_session")
             return
 
-        idx = find_charger_idx(device_id=device_id)
+        idx = await find_charger_idx(device_id=device_id)
 
         for entry in hass.config_entries.async_entries(DOMAIN):
             networks = entry.runtime_data.coordinator.data
