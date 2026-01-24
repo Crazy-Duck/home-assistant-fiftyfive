@@ -71,6 +71,56 @@
                     "description": "Borne sur laquelle arrêter la recharge"
                 }
             }
+        },
+        "soft_reset_charger": {
+            "name": "Soft reset a charger",
+            "description": "Soft resets a charger.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger to soft reset."
+                }
+            }
+        },
+        "hard_reset_charger": {
+            "name": "Hard reset a charger",
+            "description": "Hard resets a charger.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger to hard reset."
+                }
+            }
+        },
+        "unlock_connector": {
+            "name": "Unlock a connector",
+            "description": "Unlock the connector from a charger.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger from which to unlock the connector."
+                }
+            }
+        },
+        "block_charger": {
+            "name": "Block a charger",
+            "description": "Prevent a charger from being used.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger to block."
+                }
+            }
+        },
+        "unblock_charger": {
+            "name": "Unblock a charger",
+            "description": "Allow a blocked charger to be used again.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "The charger to unblock."
+                }
+            }
         }
     }
 }

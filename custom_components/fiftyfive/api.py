@@ -6,14 +6,19 @@ from typing import TYPE_CHECKING, Any
 
 from fiftyfive import (
     Api,
+    Block,
     CardSearch,
     Channel,
     ClientSearch,
+    HardReset,
     Market,
     NetworkOverview,
     Overview,
+    SoftReset,
     Start,
     Stop,
+    Unblock,
+    UnlockConnector,
 )
 
 if TYPE_CHECKING:
@@ -100,4 +105,34 @@ class FiftyfiveApiClient:
         """Stop a charge session."""
         return await self._api.make_requests(
             [Stop(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        )
+
+    async def async_soft_reset(self, charger: str) -> Any:
+        """Soft reset a charger."""
+        return await self._api.make_requests(
+            [SoftReset(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        )
+
+    async def async_hard_reset(self, charger: str) -> Any:
+        """Hard reset a charger."""
+        return await self._api.make_requests(
+            [HardReset(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        )
+
+    async def async_unlock_connector(self, charger: str) -> Any:
+        """Unlock the connector from a charger."""
+        return await self._api.make_requests(
+            [UnlockConnector(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        )
+
+    async def async_block(self, charger: str) -> Any:
+        """Block a charger."""
+        return await self._api.make_requests(
+            [Block(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        )
+
+    async def async_unblock(self, charger: str) -> Any:
+        """Unblock a charger."""
+        return await self._api.make_requests(
+            [Unblock(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
         )

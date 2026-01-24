@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
@@ -19,9 +18,10 @@ from .api import FiftyfiveApiClient
 from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 from .coordinator import FiftyfiveDataUpdateCoordinator
 from .data import FiftyfiveData
+from .service_handler import ChargerServiceHandler
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
 
     from .data import FiftyfiveConfigEntry
@@ -35,74 +35,26 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the integration (global)."""
-
-    async def find_charger_idx(device_id: str) -> str | None:
-        """Find charger idx based on device id."""
-        device_registry = dr.async_get(hass)
-
-        device = device_registry.async_get(device_id)
-        if not device:
-            LOGGER.warning("Device %s not found", device_id)
-            return None
-
-        identifier = next(iter(device.identifiers), None)
-        if not identifier or identifier[0] != DOMAIN:
-            LOGGER.warning("Device %s does not belong to %s", device_id, DOMAIN)
-            return None
-
-        return identifier[1]
-
-    async def handle_stop_charge_session(call: ServiceCall) -> None:
-        """Handle the stop_charge_session service call."""
-        device_id = call.data.get("device", None)
-
-        if not device_id:
-            LOGGER.error("No device selected for stop_charge_session")
-            return
-
-        idx = await find_charger_idx(device_id)
-
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            networks = entry.runtime_data.coordinator.data
-            if any(charger["IDX"] == idx for charger in networks):
-                client = entry.runtime_data.client
-                LOGGER.info("Stopping charge session on charger %s", idx)
-                await client.async_stop(charger=idx)
-                break
-        else:
-            LOGGER.warning("No config entry found for charger %s", idx)
-
-    async def handle_start_charge_session(call: ServiceCall) -> None:
-        """Handle the start_charge_session service call."""
-        device_id = call.data.get("device", None)
-        card_id = call.data.get("card", None)
-
-        if not device_id:
-            LOGGER.error("No device selected for start_charge_session")
-            return
-
-        if not card_id:
-            LOGGER.error("No card selected for start_charge_session")
-            return
-
-        idx = await find_charger_idx(device_id=device_id)
-
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            networks = entry.runtime_data.coordinator.data
-            if any(charger["IDX"] == idx for charger in networks):
-                client = entry.runtime_data.client
-                LOGGER.info("Starting charge session on charger %s", idx)
-                await client.async_start(charger=idx, card_id=card_id)
-                await entry.runtime_data.coordinator.start_fast_polling()
-                break
-        else:
-            LOGGER.warning("No config entry found for charger %s", idx)
-
     hass.services.async_register(
-        DOMAIN, "start_charge_session", handle_start_charge_session
+        DOMAIN, "start_charge_session", ChargerServiceHandler.handle_start
     )
     hass.services.async_register(
-        DOMAIN, "stop_charge_session", handle_stop_charge_session
+        DOMAIN, "stop_charge_session", ChargerServiceHandler.handle_stop
+    )
+    hass.services.async_register(
+        DOMAIN, "soft_reset_charger", ChargerServiceHandler.handle_soft_reset
+    )
+    hass.services.async_register(
+        DOMAIN, "hard_reset_charger", ChargerServiceHandler.handle_hard_reset
+    )
+    hass.services.async_register(
+        DOMAIN, "unlock_connector", ChargerServiceHandler.handle_unlock
+    )
+    hass.services.async_register(
+        DOMAIN, "block_charger", ChargerServiceHandler.handle_block
+    )
+    hass.services.async_register(
+        DOMAIN, "unblock_charger", ChargerServiceHandler.handle_unblock
     )
 
     return True

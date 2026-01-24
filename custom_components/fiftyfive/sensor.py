@@ -1,4 +1,4 @@
-"""Sensor platform for integration_blueprint."""
+"""Sensor platform for integration_fiftyfive."""
 
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ async def async_setup_entry(
 
 
 class FiftyfiveChargerSensor(FiftyfiveEntity, SensorEntity):
-    """integration_blueprint Sensor class."""
+    """integration_fiftyfive Sensor class."""
 
     def __init__(
         self,

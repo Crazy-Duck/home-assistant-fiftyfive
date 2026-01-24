@@ -1,4 +1,4 @@
-"""Adds config flow for Blueprint."""
+"""Adds config flow for FiftyFive."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from .const import DOMAIN, LOGGER
 
 
 class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for Blueprint."""
+    """Config flow for FiftyFive."""
 
     VERSION = 1
 

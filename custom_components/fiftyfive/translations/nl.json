@@ -71,6 +71,56 @@
                     "description": "De laadpaal waarop een sessie gestopt moet worden"
                 }
             }
+        },
+        "soft_reset_charger": {
+            "name": "Soft reset een laadpaal",
+            "description": "Soft resets een laadpaal.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "De laadpaal waarop een soft reset uitgevoerd moet worden."
+                }
+            }
+        },
+        "hard_reset_charger": {
+            "name": "Hard reset een laadpaal",
+            "description": "Hard resets een laadpaal.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "De laadpaal waarop een hard reset uitgevoerd moet worden."
+                }
+            }
+        },
+        "unlock_connector": {
+            "name": "Ontgrendel een connector",
+            "description": "Ontgrendel de connector van een laadpaal.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "De laadpaal waarvan de connector ontgrendeld moet worden."
+                }
+            }
+        },
+        "block_charger": {
+            "name": "Blokeer een laadpaal",
+            "description": "Maak een laadpaal onbeschikbaar.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "De laadpaal die geblokkeerd moet worden."
+                }
+            }
+        },
+        "unblock_charger": {
+            "name": "Deblokkeer een laadpaal",
+            "description": "Maak een geblokkeerde laadpaal terug beschikbaar.",
+            "fields": {
+                "device": {
+                    "name": "Charger",
+                    "description": "De laadpaal die gedeblokkeerd moet worden."
+                }
+            }
         }
     }
 }
