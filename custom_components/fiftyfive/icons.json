@@ -1,6 +1,11 @@
 {
     "services": {
         "start_charge_session": "mdi:battery-charging",
-        "stop_charge_session": "mdi:battery-minus-variant"
+        "stop_charge_session": "mdi:battery-minus-variant",
+        "soft_reset_charger": "mdi:restart",
+        "hard_reset_charger": "mdi:restart-alert",
+        "unlock_connector": "mdi:power-plug-off",
+        "block_charger": "mdi:lock",
+        "unblock_charger": "mdi:lock-open-variant"
     }
 }
