@@ -37,27 +37,17 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the integration (global)."""
     handler = ChargerServiceHandler(hass=hass)
 
-    hass.services.async_register(
-        DOMAIN, "start_charge_session", handler.handle_start
-    )
-    hass.services.async_register(
-        DOMAIN, "stop_charge_session", handler.handle_stop
-    )
+    hass.services.async_register(DOMAIN, "start_charge_session", handler.handle_start)
+    hass.services.async_register(DOMAIN, "stop_charge_session", handler.handle_stop)
     hass.services.async_register(
         DOMAIN, "soft_reset_charger", handler.handle_soft_reset
     )
     hass.services.async_register(
         DOMAIN, "hard_reset_charger", handler.handle_hard_reset
     )
-    hass.services.async_register(
-        DOMAIN, "unlock_connector", handler.handle_unlock
-    )
-    hass.services.async_register(
-        DOMAIN, "block_charger", handler.handle_block
-    )
-    hass.services.async_register(
-        DOMAIN, "unblock_charger", handler.handle_unblock
-    )
+    hass.services.async_register(DOMAIN, "unlock_connector", handler.handle_unlock)
+    hass.services.async_register(DOMAIN, "block_charger", handler.handle_block)
+    hass.services.async_register(DOMAIN, "unblock_charger", handler.handle_unblock)
 
     return True
 
