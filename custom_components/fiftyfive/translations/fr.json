@@ -73,52 +73,52 @@
             }
         },
         "soft_reset_charger": {
-            "name": "Soft reset a charger",
-            "description": "Soft resets a charger.",
+            "name": "Réinitialiser une borne",
+            "description": "Réinitialisation d'une borne.",
             "fields": {
                 "device": {
-                    "name": "Charger",
-                    "description": "The charger to soft reset."
+                    "name": "Borne",
+                    "description": "La borne à réinitialiser."
                 }
             }
         },
         "hard_reset_charger": {
-            "name": "Hard reset a charger",
-            "description": "Hard resets a charger.",
+            "name": "Réinitialiser matériellement une borne",
+            "description": "Réinitialisation matérielle d'une borne.",
             "fields": {
                 "device": {
-                    "name": "Charger",
-                    "description": "The charger to hard reset."
+                    "name": "Borne",
+                    "description": "La borne à réinitialiser materiellement."
                 }
             }
         },
         "unlock_connector": {
-            "name": "Unlock a connector",
-            "description": "Unlock the connector from a charger.",
+            "name": "Déverrouillez un connecteur",
+            "description": "Déverrouillezc le connecteur de la borne.",
             "fields": {
                 "device": {
-                    "name": "Charger",
-                    "description": "The charger from which to unlock the connector."
+                    "name": "Borne",
+                    "description": "Le connecteur à déverrouillez."
                 }
             }
         },
         "block_charger": {
-            "name": "Block a charger",
-            "description": "Prevent a charger from being used.",
+            "name": "Bloquer une borne",
+            "description": "Empêcher l'utilisation d'une borne.",
             "fields": {
                 "device": {
-                    "name": "Charger",
-                    "description": "The charger to block."
+                    "name": "Borne",
+                    "description": "Borne à bloquer."
                 }
             }
         },
         "unblock_charger": {
-            "name": "Unblock a charger",
-            "description": "Allow a blocked charger to be used again.",
+            "name": "Débloquer une borne",
+            "description": "Autoriser la réutilisation d'une borne bloqué.",
             "fields": {
                 "device": {
-                    "name": "Charger",
-                    "description": "The charger to unblock."
+                    "name": "Borne",
+                    "description": "Borne à débloquer."
                 }
             }
         }
