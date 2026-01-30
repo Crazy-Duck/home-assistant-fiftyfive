@@ -16,6 +16,11 @@
             "unblock": {
                 "default": "mdi:lock-open-variant"
             }
+        },
+        "sensor": {
+            "transaction_card": {
+                "default": "mdi:credit-card-outline"
+            }
         }
     },
     "services": {
