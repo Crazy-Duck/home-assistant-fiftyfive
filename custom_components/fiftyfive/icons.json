@@ -1,4 +1,23 @@
 {
+    "entity": {
+        "button": {
+            "soft_reset": {
+                "default": "mdi:restart"
+            },
+            "hard_reset": {
+                "default": "mdi:restart-alert"
+            },
+            "unlock": {
+                "default": "mdi:power-plug-off"
+            },
+            "block": {
+                "default": "mdi:lock"
+            },
+            "unblock": {
+                "default": "mdi:lock-open-variant"
+            }
+        }
+    },
     "services": {
         "start_charge_session": "mdi:battery-charging",
         "stop_charge_session": "mdi:battery-minus-variant",

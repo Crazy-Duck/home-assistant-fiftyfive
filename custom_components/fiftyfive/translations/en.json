@@ -29,6 +29,23 @@
         }
     },
     "entity": {
+        "button": {
+            "soft_reset": {
+                "name": "Soft reset"
+            },
+            "hard_reset": {
+                "name": "Hard reset"
+            },
+            "unlock": {
+                "name": "Unlock connector"
+            },
+            "block": {
+                "name": "Block"
+            },
+            "unblock": {
+                "name": "Unblock"
+            }
+        },
         "sensor": {
             "power_draw": {
                 "name": "Power draw"

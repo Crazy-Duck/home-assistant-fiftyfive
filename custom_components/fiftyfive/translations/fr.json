@@ -29,6 +29,23 @@
         }
     },
     "entity": {
+        "button": {
+            "soft_reset": {
+                "name": "Réinitialiser"
+            },
+            "hard_reset": {
+                "name": "Réinitialiser matériellement"
+            },
+            "unlock": {
+                "name": "Déverrouillez"
+            },
+            "block": {
+                "name": "Bloquer"
+            },
+            "unblock": {
+                "name": "Débloquer"
+            }
+        },
         "sensor": {
             "power_draw": {
                 "name": "Puissance absorbée"

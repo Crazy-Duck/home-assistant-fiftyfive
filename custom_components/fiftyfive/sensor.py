@@ -1,4 +1,4 @@
-"""Sensor platform for integration_fiftyfive."""
+"""Sensor platform for Fiftyfive."""
 
 from __future__ import annotations
 
@@ -98,7 +98,7 @@ async def async_setup_entry(
 
 
 class FiftyfiveChargerSensor(FiftyfiveEntity, SensorEntity):
-    """integration_fiftyfive Sensor class."""
+    """Fiftyfive Sensor class."""
 
     def __init__(
         self,
@@ -109,7 +109,7 @@ class FiftyfiveChargerSensor(FiftyfiveEntity, SensorEntity):
         """Initialize the sensor class."""
         super().__init__(coordinator, idx)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self.idx}_{entity_description.key}"
+        self._attr_unique_id = f"{idx}_{entity_description.key}"
 
     @property
     def native_value(self) -> str | None:

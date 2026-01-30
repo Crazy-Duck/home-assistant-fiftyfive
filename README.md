@@ -54,14 +54,14 @@ launched via the developer tools, helpers, automations, ... They are:
 
 #### Buttons / switches
 
-It is a deliberate choice not to offer switches out of the box in this
-integration. The reason being that users can have multiple cards, chargers and
-channels associated with their accounts. Foreseeing switches for all possible
-combinations out-of-the-box would lead to a whole bunch of switches littering
-your instance, with most of them likely to never be used. The easiest solution
-therefore is to simply point people towards template helpers, which allow you
-to create your own switches from the UI for the card/charger/channel combos you
-prefer. The process is pretty simple:
+It is a deliberate choice not to offer start/stop charging switches out of the
+box in this integration. The reason being that users can have multiple cards,
+chargers and channels associated with their accounts. Foreseeing switches for
+all possible combinations out-of-the-box would lead to a whole bunch of 
+switches littering your instance, with most of them likely to never be used.
+The easiest solution therefore is to simply point people towards template
+helpers, which allow you to create your own switches from the UI for the 
+card/charger/channel combos you prefer. The process is pretty simple:
 
 * Go to `Settings` > `Devices & services` > `Helpers`
 * Click `+ Create helper`
