@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "Voor hulp bij de configuratie: https://github.com/Crazy-Duck/home-assistant-fiftyfive",
+                "description": "Configureer je 50five account. [Leer meer.]({docs_url})",
                 "data": {
                     "username": "Gebruikersnaam",
                     "password": "Paswoord",

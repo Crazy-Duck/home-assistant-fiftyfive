@@ -68,6 +68,9 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             ),
             errors=_errors,
+            description_placeholders={
+                "docs_url": "https://github.com/Crazy-Duck/home-assistant-fiftyfive"
+            }
         )
 
     async def _test_credentials(
