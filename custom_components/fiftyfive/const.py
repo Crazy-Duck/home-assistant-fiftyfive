@@ -10,3 +10,5 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 CHARGING_UPDATE_INTERVAL = timedelta(seconds=5)
 
 FAST_POLL_TIME = 30
+
+CONF_CUST_TYPE = "customer_type"

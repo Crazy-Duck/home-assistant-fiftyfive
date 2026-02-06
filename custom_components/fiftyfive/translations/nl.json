@@ -6,7 +6,8 @@
                 "data": {
                     "username": "Gebruikersnaam",
                     "password": "Paswoord",
-                    "country": "Markt"
+                    "country": "Markt",
+                    "customer_type": "Type klant"
                 }
             }
         },
@@ -25,6 +26,12 @@
                 "fr": "Frankrijk",
                 "nl": "Nederland",
                 "uk": "Verenigd Koninkrijk"
+            }
+        },
+        "customer_type": {
+            "options": {
+                "fiftyfive": "50five",
+                "shell": "Voormalig Shell"
             }
         }
     },

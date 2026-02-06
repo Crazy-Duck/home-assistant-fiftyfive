@@ -10,6 +10,7 @@ from fiftyfive import (
     CardSearch,
     Channel,
     ClientSearch,
+    CustomerType,
     HardReset,
     Market,
     NetworkOverview,
@@ -55,11 +56,16 @@ class FiftyfiveApiClient:
         username: str,
         password: str,
         market: Market,
+        customer_type: CustomerType,
         session: ClientSession,
     ) -> None:
         """Sample API Client."""
         self._api = Api(
-            session=session, email=username, password=password, market=market
+            session=session,
+            email=username,
+            password=password,
+            market=market,
+            customer_type=customer_type,
         )
 
     async def async_get_data(self) -> Any:

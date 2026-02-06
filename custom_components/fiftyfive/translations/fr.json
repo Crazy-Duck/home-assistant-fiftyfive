@@ -6,7 +6,8 @@
                 "data": {
                     "username": "Nom d'utilisateur",
                     "password": "Mot de passe",
-                    "country": "Région"
+                    "country": "Région",
+                    "customer_type": "Type de client"
                 }
             }
         },
@@ -25,6 +26,12 @@
                 "fr": "France",
                 "nl": "Pays-Bas",
                 "uk": "Royaume-Uni"
+            }
+        },
+        "customer_type": {
+            "options": {
+                "fiftyfive": "50five",
+                "shell": "Ancien client Shell"
             }
         }
     },

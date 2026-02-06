@@ -6,7 +6,8 @@
                 "data": {
                     "username": "Username",
                     "password": "Password",
-                    "country": "Market"
+                    "country": "Market",
+                    "customer_type": "Customer type"
                 }
             }
         },
@@ -25,6 +26,12 @@
                 "fr": "France",
                 "nl": "Netherlands",
                 "uk": "United Kingdom"
+            }
+        },
+        "customer_type": {
+            "options": {
+                "fiftyfive": "50five",
+                "shell": "Former Shell"
             }
         }
     },

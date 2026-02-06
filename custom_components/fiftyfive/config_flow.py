@@ -11,9 +11,9 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from slugify import slugify
 
-from fiftyfive import Api, Market, NetworkOverview
+from fiftyfive import Api, CustomerType, Market, NetworkOverview
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_CUST_TYPE, DOMAIN, LOGGER
 
 
 class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -32,6 +32,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 market=user_input[CONF_COUNTRY],
+                customer_type=user_input[CONF_CUST_TYPE],
             ):
                 LOGGER.warning("Invalid credentials/market.")
                 _errors["base"] = "auth"
@@ -65,6 +66,16 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_COUNTRY): selector.SelectSelector(
                         selector.SelectSelectorConfig(options=[m.value for m in Market])
                     ),
+                    vol.Required(
+                        CONF_CUST_TYPE,
+                        default=(user_input or {}).get(
+                            CONF_CUST_TYPE, CustomerType.FORMER_SHELL
+                        ),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[c.value for c in CustomerType]
+                        )
+                    ),
                 },
             ),
             errors=_errors,
@@ -74,7 +85,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _test_credentials(
-        self, username: str, password: str, market: Market
+        self, username: str, password: str, market: Market, customer_type: CustomerType
     ) -> Any:
         """Validate credentials."""
         client = Api(
@@ -82,5 +93,6 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             email=username,
             password=password,
             market=market,
+            customer_type=customer_type,
         )
         return await client.make_requests([NetworkOverview()])

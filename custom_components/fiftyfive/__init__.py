@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
 from .api import FiftyfiveApiClient
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import CONF_CUST_TYPE, DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 from .coordinator import FiftyfiveDataUpdateCoordinator
 from .data import FiftyfiveData
 from .service_handler import ChargerServiceHandler
@@ -73,6 +73,7 @@ async def async_setup_entry(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
             market=entry.data[CONF_COUNTRY],
+            customer_type=entry.data[CONF_CUST_TYPE],
             session=async_get_clientsession(hass),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
