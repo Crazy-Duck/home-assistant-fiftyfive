@@ -33,6 +33,8 @@ Alternatively:
     - **Username**: Your 50five username (your e-mail address by default)
     - **Password**: Your account password
     - **Market**: The market in which your account was created
+    - **Customer type**: Whether you're a native 50five customer or a former
+                         Shell one
 
 The integration discovers all chargers linked to your account and creates
 devices and sensors for each discovered charger.
