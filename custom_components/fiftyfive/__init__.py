@@ -14,6 +14,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
+from fiftyfive import CustomerType
+
 from .api import FiftyfiveApiClient
 from .const import CONF_CUST_TYPE, DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 from .coordinator import FiftyfiveDataUpdateCoordinator
@@ -21,6 +23,7 @@ from .data import FiftyfiveData
 from .service_handler import ChargerServiceHandler
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
 
@@ -32,6 +35,25 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.SENSOR,
 ]
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old config entries."""
+    LOGGER.info("%s.%s", config_entry.version, config_entry.minor_version)
+    if config_entry.version == 1:
+        LOGGER.debug(
+            "Migrating config from version %s",
+            config_entry.version,
+        )
+        new_data = {**config_entry.data}
+        new_data[CONF_CUST_TYPE] = CustomerType.FORMER_SHELL
+
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+        LOGGER.debug(
+            "Migrating to config version %s successful",
+            config_entry.version,
+        )
+    return True
 
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
