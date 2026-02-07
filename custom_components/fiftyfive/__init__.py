@@ -39,7 +39,6 @@ PLATFORMS: list[Platform] = [
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old config entries."""
-    LOGGER.info("%s.%s", config_entry.version, config_entry.minor_version)
     if config_entry.version == 1:
         LOGGER.debug(
             "Migrating config from version %s",
