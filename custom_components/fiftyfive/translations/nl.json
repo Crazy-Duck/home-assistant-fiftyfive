@@ -47,7 +47,7 @@
                 "name": "Ontgrendelen"
             },
             "block": {
-                "name": "Blokeren"
+                "name": "Blokkeren"
             },
             "unblock": {
                 "name": "Deblokkeren"
@@ -127,7 +127,7 @@
             }
         },
         "block_charger": {
-            "name": "Blokeer een laadpaal",
+            "name": "Blokkeer een laadpaal",
             "description": "Maak een laadpaal onbeschikbaar.",
             "fields": {
                 "device": {
