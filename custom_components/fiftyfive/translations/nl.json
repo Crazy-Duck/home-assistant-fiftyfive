@@ -47,7 +47,7 @@
                 "name": "Ontgrendelen"
             },
             "block": {
-                "name": "Blokeren"
+                "name": "Blokkeren"
             },
             "unblock": {
                 "name": "Deblokkeren"
@@ -73,8 +73,8 @@
     },
     "services": {
         "start_charge_session": {
-            "name": "Start een laad sessie",
-            "description": "Start een laad sessie met de gegeven laadkaart",
+            "name": "Start een laadsessie",
+            "description": "Start een laadsessie met de gegeven laadkaart",
             "fields": {
                 "device": {
                     "name": "Laadpaal",
@@ -87,8 +87,8 @@
             }
         },
         "stop_charge_session": {
-            "name": "Stop een laad sessie",
-            "description": "Stopt een laad sessie",
+            "name": "Stop een laadsessie",
+            "description": "Stopt een laadsessie",
             "fields": {
                 "device": {
                     "name": "Laadpaal",
@@ -127,7 +127,7 @@
             }
         },
         "block_charger": {
-            "name": "Blokeer een laadpaal",
+            "name": "Blokkeer een laadpaal",
             "description": "Maak een laadpaal onbeschikbaar.",
             "fields": {
                 "device": {
