@@ -63,8 +63,13 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             type=selector.TextSelectorType.PASSWORD,
                         ),
                     ),
-                    vol.Required(CONF_COUNTRY): selector.SelectSelector(
-                        selector.SelectSelectorConfig(options=[m.value for m in Market])
+                    vol.Optional(
+                        CONF_COUNTRY,
+                        default=(user_input or {}).get(CONF_COUNTRY, Market.NONE),
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[m.value for m in Market], translation_key="country"
+                        )
                     ),
                     vol.Required(
                         CONF_CUST_TYPE,
@@ -73,7 +78,8 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         ),
                     ): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=[c.value for c in CustomerType]
+                            options=[c.value for c in CustomerType],
+                            translation_key="customer_type",
                         )
                     ),
                 },
