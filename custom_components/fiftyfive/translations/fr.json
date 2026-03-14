@@ -21,6 +21,7 @@
     "selector": {
         "country": {
             "options": {
+                "at": "Autriche",
                 "belux": "Belgique/Luxembourg",
                 "de": "Allemagne",
                 "fr": "France",
