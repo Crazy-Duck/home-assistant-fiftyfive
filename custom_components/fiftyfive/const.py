@@ -12,3 +12,5 @@ CHARGING_UPDATE_INTERVAL = timedelta(seconds=5)
 FAST_POLL_TIME = 30
 
 CONF_CUST_TYPE = "customer_type"
+CONF_2FA_CODE = "auth_code"
+CONF_COOKIES = "session_cookies"

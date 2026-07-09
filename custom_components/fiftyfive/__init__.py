@@ -17,7 +17,14 @@ from homeassistant.loader import async_get_loaded_integration
 from fiftyfive import CustomerType
 
 from .api import FiftyfiveApiClient
-from .const import CONF_CUST_TYPE, DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .auth import build_base_url, seed_cookies
+from .const import (
+    CONF_COOKIES,
+    CONF_CUST_TYPE,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import FiftyfiveDataUpdateCoordinator
 from .data import FiftyfiveData
 from .service_handler import ChargerServiceHandler
@@ -89,13 +96,26 @@ async def async_setup_entry(
     # Brittle but less mess than overriding __init__
     coordinator.fast_polling_until = 0
 
+    session = async_get_clientsession(hass)
+
+    # Reuse the session cookies captured during (2FA) setup so that regular
+    # polling does not trigger a new login -- a new login would require a fresh
+    # e-mailed 2FA code which cannot be obtained unattended. When the stored
+    # session eventually expires the coordinator raises ConfigEntryAuthFailed,
+    # which triggers the reauth flow so the user can supply a new code.
+    seed_cookies(
+        session,
+        build_base_url(entry.data[CONF_COUNTRY], entry.data[CONF_CUST_TYPE]),
+        entry.data.get(CONF_COOKIES, {}),
+    )
+
     entry.runtime_data = FiftyfiveData(
         client=FiftyfiveApiClient(
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
             market=entry.data[CONF_COUNTRY],
             customer_type=entry.data[CONF_CUST_TYPE],
-            session=async_get_clientsession(hass),
+            session=session,
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
