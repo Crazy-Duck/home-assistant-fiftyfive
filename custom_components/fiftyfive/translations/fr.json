@@ -9,13 +9,23 @@
                     "country": "Région",
                     "customer_type": "Type de client"
                 }
+            },
+            "2fa": {
+                "title": "Authentification à deux facteurs",
+                "description": "Un code de vérification à usage unique a été envoyé par e-mail à votre compte 50five ({username}). Saisissez le code ci-dessous pour terminer la connexion.",
+                "data": {
+                    "auth_code": "Code de vérification"
+                }
             }
         },
         "error": {
-            "auth": "Erreur sur l'identifiant ou la région."
+            "auth": "Erreur sur l'identifiant ou la région.",
+            "connection": "Impossible de se connecter au portail 50five. Veuillez réessayer.",
+            "invalid_2fa": "Code de vérification invalide ou expiré."
         },
         "abort": {
-            "already_configured": "Cette combinaison est déjà configurée."
+            "already_configured": "Cette combinaison est déjà configurée.",
+            "reauth_successful": "La ré-authentification a réussi."
         }
     },
     "selector": {

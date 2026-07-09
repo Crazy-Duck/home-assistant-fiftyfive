@@ -9,13 +9,23 @@
                     "country": "Markt",
                     "customer_type": "Type klant"
                 }
+            },
+            "2fa": {
+                "title": "Tweestapsverificatie",
+                "description": "Er is een eenmalige verificatiecode gemaild naar je 50five account ({username}). Voer de code hieronder in om het aanmelden te voltooien.",
+                "data": {
+                    "auth_code": "Verificatiecode"
+                }
             }
         },
         "error": {
-            "auth": "Ongeldige inloggegevens/markt."
+            "auth": "Ongeldige inloggegevens/markt.",
+            "connection": "Kan geen verbinding maken met het 50five portaal. Probeer het opnieuw.",
+            "invalid_2fa": "Ongeldige of verlopen verificatiecode."
         },
         "abort": {
-            "already_configured": "Deze combinatie is al configureerd."
+            "already_configured": "Deze combinatie is al configureerd.",
+            "reauth_successful": "Opnieuw aanmelden is gelukt."
         }
     },
     "selector": {

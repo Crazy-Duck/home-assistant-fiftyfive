@@ -39,6 +39,27 @@ Alternatively:
 The integration discovers all chargers linked to your account and creates
 devices and sensors for each discovered charger.
 
+### Two-factor authentication (2FA)
+
+The 50five / EVC-Net portal protects accounts with **e-mail based two-factor
+authentication**. When it is enabled on your account the setup becomes a two
+step process:
+
+1. Enter your credentials (see above) and click **Submit**. 50five will e-mail
+   a one-time verification code to the e-mail address of your account.
+1. A second form appears asking for the **Verification code**. Open the e-mail
+   from 50five, copy the code, paste it into the field and click **Submit**.
+
+Once the code is accepted the integration stores the authenticated session so
+that normal polling does **not** require a new code.
+
+> [!NOTE]
+> Because the verification code is delivered by e-mail it cannot be obtained
+> unattended. If the stored session eventually expires, Home Assistant will
+> raise a **"Reconfigure"/re-authentication** notification for the integration.
+> Simply open it, re-enter your password and the new code that 50five e-mails
+> you. Accounts without 2FA continue to work with a single step as before.
+
 ### Actions
 
 #### Available service actions

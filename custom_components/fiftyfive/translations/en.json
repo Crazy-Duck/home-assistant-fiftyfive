@@ -9,13 +9,23 @@
                     "country": "Market",
                     "customer_type": "Customer type"
                 }
+            },
+            "2fa": {
+                "title": "Two-factor authentication",
+                "description": "A one-time verification code has been e-mailed to your 50five account ({username}). Enter the code below to finish signing in.",
+                "data": {
+                    "auth_code": "Verification code"
+                }
             }
         },
         "error": {
-            "auth": "Invalid credentials/market."
+            "auth": "Invalid credentials/market.",
+            "connection": "Could not connect to the 50five portal. Please try again.",
+            "invalid_2fa": "Invalid or expired verification code."
         },
         "abort": {
-            "already_configured": "This entry is already configured."
+            "already_configured": "This entry is already configured.",
+            "reauth_successful": "Re-authentication was successful."
         }
     },
     "selector": {
