@@ -15,6 +15,7 @@ from fiftyfive import CustomerType, Market
 
 from .auth import (
     LoginResult,
+    async_fetch_2fa_token,
     async_start_login,
     async_submit_2fa,
     build_base_url,
@@ -37,6 +38,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._login_input: dict[str, Any] = {}
         self._base_url: str = ""
         self._session = None
+        self._2fa_token: str | None = None
         self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
@@ -67,7 +69,21 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if result is LoginResult.TWO_FACTOR_REQUIRED:
                     LOGGER.debug("Credentials accepted, 2FA code required")
-                    return await self.async_step_2fa()
+                    # Loading the /2fa page is what makes the portal actually
+                    # e-mail the one time code to the user, so we must fetch it
+                    # *before* prompting for the code (and reuse the CSRF token
+                    # it contains when we submit the code later).
+                    try:
+                        self._2fa_token = await async_fetch_2fa_token(
+                            self._session, self._base_url
+                        )
+                    except Exception:  # noqa: BLE001
+                        LOGGER.exception(
+                            "Error while requesting the 2FA code e-mail"
+                        )
+                        _errors["base"] = "connection"
+                    else:
+                        return await self.async_step_2fa()
                 if result is LoginResult.OK:
                     # Portal did not ask for 2FA (backwards compatible path).
                     return await self._async_create_or_update_entry()
@@ -134,6 +150,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self._session,
                     self._base_url,
                     user_input[CONF_2FA_CODE],
+                    token=self._2fa_token,
                 )
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Error while submitting the 2FA code")
