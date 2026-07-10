@@ -79,6 +79,9 @@
             },
             "status": {
                 "name": "Charger status"
+            },
+            "total_energy_delivered": {
+                "name": "Total energy delivered"
             }
         }
     },

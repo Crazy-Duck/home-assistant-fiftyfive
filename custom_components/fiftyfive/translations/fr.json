@@ -79,6 +79,9 @@
             },
             "status": {
                 "name": "Etat de la borne"
+            },
+            "total_energy_delivered": {
+                "name": "Énergie totale délivrée"
             }
         }
     },

@@ -20,6 +20,7 @@ from fiftyfive import (
     SoftReset,
     Start,
     Stop,
+    TotalUsage,
     Unblock,
     UnlockConnector,
 )
@@ -300,3 +301,42 @@ class FiftyfiveApiClient:
         return await self._api.make_requests(
             [Unblock(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
         )
+
+    async def async_get_total_energy(self) -> float | None:
+        """
+        Fetch the total energy delivered by all recharge spots.
+
+        This queries the portal's ``totalUsage`` service with
+        ``mode="rechargeSpot"``, which returns the lifetime total energy
+        delivered across all chargers linked to the account.  The response is
+        a dict like ``{"number": "4,159", "unit": "MWh"}`` (European comma
+        formatting). We parse and normalize to kWh.
+
+        Returns ``None`` on failure; failures are logged but never break
+        regular polling.
+        """
+        try:
+            result = await self._api.make_requests([TotalUsage(mode="rechargeSpot")])
+            # result is a list [response_for_totalUsage]; we want the first
+            data = result[0] if result else {}
+            if not isinstance(data, dict):
+                _LOGGER.debug("totalUsage returned unexpected type: %s", type(data))
+                return None
+
+            number_str = data.get("number", "")
+            unit = data.get("unit", "kWh")
+
+            # Parse European-formatted number (remove commas/dots as thousand sep)
+            cleaned = number_str.replace(",", "").replace(".", "")
+            value = float(cleaned)
+
+            # Normalize to kWh
+            if unit == "MWh":
+                value *= 1000
+            elif unit == "GWh":
+                value *= 1_000_000
+
+            return value
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Failed to fetch total energy", exc_info=True)
+            return None

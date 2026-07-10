@@ -79,6 +79,9 @@
             },
             "status": {
                 "name": "Lader status"
+            },
+            "total_energy_delivered": {
+                "name": "Totaal geleverde energie"
             }
         }
     },

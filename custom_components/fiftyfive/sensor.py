@@ -86,6 +86,16 @@ ENTITY_DESCRIPTIONS = (
         translation_key="status",
         value_fn=lambda network: network["NOTIFICATION"],
     ),
+    FiftyfiveSensorEntityDescription(
+        key="total_energy_delivered",
+        translation_key="total_energy_delivered",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        # Account-wide total energy delivered by all recharge spots.
+        # Queried from the portal's totalUsage(mode="rechargeSpot") service.
+        value_fn=lambda network: network.get("TOTAL_ENERGY_KWH"),
+    ),
 )
 
 
