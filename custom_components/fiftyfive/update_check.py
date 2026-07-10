@@ -1,13 +1,15 @@
 """
 Check GitHub for newer releases of this integration.
 
-HACS shows updates in its own UI, but not everyone browses HACS regularly.
 This module polls the GitHub *Releases* API for the repository that publishes
-the integration and:
-1. Updates the ``update_state`` dict (powering binary_sensor.fiftyfive_update_available)
-2. Creates a persistent notification in HA's notification center when a newer version exists
+the integration and updates the ``update_state`` dict, which powers
+``binary_sensor.fiftyfive_update_available``.
 
-The notification auto-dismisses when you update to the latest version.
+It deliberately does **not** create persistent (pop-up) notifications: HACS
+already publishes a proper, clickable update card under
+*Settings -> Updates* (and in the notification center) with a working
+**Install** button for this integration, so a second self-made notification
+would only be noise.
 """
 
 from __future__ import annotations
@@ -15,13 +17,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from awesomeversion import AwesomeVersion, AwesomeVersionException
-from homeassistant.components import persistent_notification
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     LOGGER,
     UPDATE_LATEST_RELEASE_URL,
-    UPDATE_NOTIFICATION_ID,
     UPDATE_RELEASES_URL,
     UPDATE_TAGS_URL,
 )
@@ -124,11 +124,11 @@ async def async_check_for_update(
     entry: FiftyfiveConfigEntry,
 ) -> None:
     """
-    Check GitHub for a newer release and notify the user.
+    Check GitHub for a newer release and update the ``update_state`` dict.
 
-    Updates the ``update_state`` dict (powering the binary sensor) and creates
-    a persistent notification in HA's notification center when a newer version
-    exists. The notification auto-dismisses when you're on the latest version.
+    This powers ``binary_sensor.fiftyfive_update_available``.  No persistent
+    (pop-up) notification is created: HACS already surfaces a clickable update
+    card with an Install button, so we don't add a duplicate.
 
     Best effort: network/parse errors are logged and never propagate, so this
     can be scheduled safely in the background.
@@ -177,35 +177,15 @@ async def async_check_for_update(
         return
 
     if _is_newer(latest, installed):
+        # The binary sensor turns "on" from the update_state we just set; HACS
+        # shows the clickable update card. No self-made notification here.
         LOGGER.info(
-            "A new 50five release is available: %s (installed: %s)",
+            "A new 50five release is available: %s (installed: %s). "
+            "Update via the HACS card under Settings -> Updates.",
             latest,
             installed,
         )
-        try:
-            persistent_notification.async_create(
-                hass,
-                (
-                    f"A new version of the **50five** integration is available.\n\n"
-                    f"- Installed: `{installed}`\n"
-                    f"- Latest: `{latest}`\n\n"
-                    f"Update via HACS, or view the release notes "
-                    f"[on GitHub]({release_url})."
-                ),
-                title="50five update available",
-                notification_id=UPDATE_NOTIFICATION_ID,
-            )
-            LOGGER.info("Update notification created (ID: %s)", UPDATE_NOTIFICATION_ID)
-        except Exception as err:  # noqa: BLE001
-            LOGGER.error(
-                "Failed to create update notification: %s", err, exc_info=True
-            )
     else:
         LOGGER.info(
             "50five up to date (installed %s, latest %s)", installed, latest
         )
-        # Clear any stale notification from a previous (now-installed) update.
-        try:
-            persistent_notification.async_dismiss(hass, UPDATE_NOTIFICATION_ID)
-        except Exception as err:  # noqa: BLE001
-            LOGGER.debug("Failed to dismiss notification: %s", err)

@@ -35,5 +35,3 @@ UPDATE_CHECK_INTERVAL = timedelta(minutes=15)
 # portal exposes a rolling ~3-day hourly window, so an hourly refresh keeps the
 # statistics filled without gaps (e.g. after HA downtime).
 STATISTICS_IMPORT_INTERVAL = timedelta(hours=1)
-# Stable id so repeated checks update (rather than stack) the notification.
-UPDATE_NOTIFICATION_ID = "fiftyfive_update_available"

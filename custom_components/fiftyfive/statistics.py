@@ -74,6 +74,25 @@ if TYPE_CHECKING:
 # entity's unique id is ``f"{idx}_{key}"``.
 _POWER_KEY = "power_draw"
 
+# How far back an hour must be before we import it into statistics.
+#
+# The power sensor has ``state_class = measurement``, so Home Assistant's
+# recorder compiles its *own* long-term statistics for the same statistic_id
+# from live states.  It compiles each completed hour shortly *after* the hour
+# boundary (e.g. the 05:00-06:00 hour is compiled at ~06:00:10).  If our import
+# writes a very recent hour that the recorder has not compiled yet, the
+# recorder's own INSERT later clashes with our row and raises
+# ``UNIQUE constraint failed: statistics.metadata_id, statistics.start_ts`` -
+# which aborts the recorder's whole statistics run and leaves the sensor's
+# history broken/empty.
+#
+# By only importing hours at least this old, we guarantee the recorder has
+# already compiled them (our write becomes a safe UPDATE of the existing row)
+# or will never compile them because HA was down then (a safe INSERT the
+# recorder never touches).  Recent hours are left entirely to the recorder,
+# which records them live anyway, so nothing is lost.
+_RECORDER_LAG = timedelta(hours=2)
+
 
 def _build_metadata(entity_id: str) -> dict:
     """Build recorder statistics metadata for the power sensor entity."""
@@ -147,15 +166,11 @@ def _series_to_statistics(
     history graph stays continuous instead of showing gaps when the car was
     not charging.
 
-    The current (incomplete) hour is ALWAYS skipped.  The power sensor has
-    ``state_class = measurement``, so Home Assistant's recorder compiles its
-    own long-term statistics for the same ``statistic_id`` from live states.
-    If we imported the current hour, the recorder would - at the next hour
-    boundary - try to insert its own compiled row for that very hour and hit a
-    ``UNIQUE constraint failed: statistics.metadata_id, statistics.start_ts``
-    error.  Older hours are safe: either the recorder already compiled them
-    (``async_import_statistics`` then simply updates the existing row) or it
-    never will (e.g. Home Assistant was down), so there is no future clash.
+    Only hours at least :data:`_RECORDER_LAG` old are returned.  Recent hours
+    are skipped because Home Assistant's recorder compiles its own statistics
+    for this ``measurement`` sensor from live states, and importing an hour it
+    has not compiled yet causes a ``UNIQUE constraint failed`` clash in the
+    recorder (see the :data:`_RECORDER_LAG` note for the full rationale).
 
     Args:
         series: Hourly power values (kW), oldest to newest.
@@ -166,6 +181,9 @@ def _series_to_statistics(
 
     now = dt_util.now()
     current_hour = now.replace(minute=0, second=0, microsecond=0)
+    # Newest hour we may safely import; anything more recent is left to the
+    # recorder to avoid a UNIQUE-constraint clash with its live compilation.
+    newest_importable = current_hour - _RECORDER_LAG
     count = len(series)
 
     # Try to build timestamps from the portal labels first (robust across
@@ -183,10 +201,10 @@ def _series_to_statistics(
             start = current_hour - timedelta(hours=(count - 1 - index))
         # Normalize to the top of the hour.
         start = start.replace(minute=0, second=0, microsecond=0)
-        # Always skip the current (incomplete) hour: the recorder compiles that
-        # hour itself and a pre-inserted row would cause a UNIQUE-constraint
-        # clash when it does.
-        if start >= current_hour:
+        # Skip recent hours (current, previous, ...): the recorder is still
+        # compiling those itself and a pre-inserted row would cause a
+        # UNIQUE-constraint clash. Only import hours old enough to be safe.
+        if start > newest_importable:
             continue
         # Idle hours -> 0 kW so the graph stays continuous.
         reading = 0.0 if value is None else value
@@ -208,10 +226,12 @@ async def async_import_power_history(
     """
     Fetch the portal power history and import it into HA statistics.
 
-    Only completed past hours are imported; the current (incomplete) hour is
-    always skipped because the recorder compiles that hour itself and a
-    pre-inserted row would cause a UNIQUE-constraint clash.  This applies to
-    both the automatic hourly import and the manual service.
+    Only hours at least :data:`_RECORDER_LAG` old are imported; more recent
+    hours are left to the recorder, which compiles them itself for this
+    ``measurement`` sensor.  This avoids a UNIQUE-constraint clash that would
+    otherwise abort the recorder's statistics run and blank out the sensor's
+    history.  Applies to both the automatic hourly import and the manual
+    service.
 
     Args:
         hass: Home Assistant instance.
