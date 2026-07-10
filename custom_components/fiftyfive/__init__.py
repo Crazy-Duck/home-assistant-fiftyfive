@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_loaded_integration
 
 from fiftyfive import CustomerType
@@ -24,10 +25,14 @@ from .const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     LOGGER,
+    STATISTICS_IMPORT_INTERVAL,
+    UPDATE_CHECK_INTERVAL,
 )
 from .coordinator import FiftyfiveDataUpdateCoordinator
 from .data import FiftyfiveData
 from .service_handler import ChargerServiceHandler
+from .statistics import async_import_power_history
+from .update_check import async_check_for_update
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -39,6 +44,7 @@ if TYPE_CHECKING:
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SENSOR,
 ]
@@ -119,6 +125,7 @@ async def async_setup_entry(
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
+        update_state={},
     )
 
     await coordinator.async_config_entry_first_refresh()
@@ -126,7 +133,51 @@ async def async_setup_entry(
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
+    _async_setup_power_history(hass, entry)
+    _async_setup_update_check(hass, entry)
+
     return True
+
+
+def _async_setup_power_history(
+    hass: HomeAssistant,
+    entry: FiftyfiveConfigEntry,
+) -> None:
+    """
+    Backfill the power sensor history from the portal, then refresh hourly.
+
+    The sensor entities are registered by the time this runs, so their
+    statistics can be imported.  The work happens in a background task so it
+    never blocks setup, and is repeated on an interval to keep the rolling
+    window filled.
+    """
+
+    async def _import(_now: object = None) -> None:
+        await async_import_power_history(hass, entry)
+
+    entry.async_create_background_task(
+        hass, _import(), name="fiftyfive_power_history_initial"
+    )
+    entry.async_on_unload(
+        async_track_time_interval(hass, _import, STATISTICS_IMPORT_INTERVAL)
+    )
+
+
+def _async_setup_update_check(
+    hass: HomeAssistant,
+    entry: FiftyfiveConfigEntry,
+) -> None:
+    """Check GitHub for a newer release now and then daily."""
+
+    async def _check(_now: object = None) -> None:
+        await async_check_for_update(hass, entry)
+
+    entry.async_create_background_task(
+        hass, _check(), name="fiftyfive_update_check_initial"
+    )
+    entry.async_on_unload(
+        async_track_time_interval(hass, _check, UPDATE_CHECK_INTERVAL)
+    )
 
 
 async def async_unload_entry(

@@ -12,7 +12,7 @@
             },
             "2fa": {
                 "title": "Tweestapsverificatie",
-                "description": "Er is een eenmalige verificatiecode gemaild naar je 50five account ({username}). Voer de code hieronder in om het aanmelden te voltooien.",
+                "description": "Er is een eenmalige verificatiecode gemaild naar je 50five account ({username}). Voer de code hieronder in om het aanmelden te voltooien. Het portaal houdt de sessie ongeveer 24 uur geldig; wanneer die verloopt vraagt Home Assistant je om opnieuw aan te melden met een nieuwe code.",
                 "data": {
                     "auth_code": "Verificatiecode"
                 }

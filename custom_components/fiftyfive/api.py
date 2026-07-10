@@ -24,6 +24,8 @@ from fiftyfive import (
     UnlockConnector,
 )
 
+from .auth import extract_cookies_for_url
+
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
@@ -53,27 +55,56 @@ def extract_latest_power(graph: Any) -> float | None:
     We return the most recent non-null value of the kW dataset (the last time
     bin, i.e. "now"), or ``None`` when no usable value is present.
     """
+    dataset = _power_dataset(graph)
+    if dataset is None:
+        return None
+    for value in reversed(dataset.get("values") or []):
+        if value is not None:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+    return None
+
+
+def _power_dataset(graph: Any) -> dict | None:
+    """Return the kW ``values`` dataset from a ``current`` graph response."""
     if not isinstance(graph, dict):
         return None
     datasets = graph.get("datasets")
     if not isinstance(datasets, dict):
         return None
-
     for key, dataset in datasets.items():
         # The companion "<channel>_count" series holds transaction counts, not
         # power, so skip it and only consider the kW dataset.
         if str(key).endswith("_count"):
             continue
-        if not isinstance(dataset, dict) or dataset.get("unit") != "kW":
-            continue
-        values = dataset.get("values") or []
-        for value in reversed(values):
-            if value is not None:
-                try:
-                    return float(value)
-                except (TypeError, ValueError):
-                    return None
+        if isinstance(dataset, dict) and dataset.get("unit") == "kW":
+            return dataset
     return None
+
+
+def extract_power_series(graph: Any) -> list[float | None]:
+    """
+    Return the full kW power series (oldest -> newest) from a ``current`` graph.
+
+    Used to backfill Home Assistant's long-term statistics with the charging
+    power history that the portal itself graphs.  ``None`` is kept for bins
+    without a reading so the caller can decide how to handle gaps.
+    """
+    dataset = _power_dataset(graph)
+    if dataset is None:
+        return []
+    series: list[float | None] = []
+    for value in dataset.get("values") or []:
+        if value is None:
+            series.append(None)
+            continue
+        try:
+            series.append(float(value))
+        except (TypeError, ValueError):
+            series.append(None)
+    return series
 
 
 class FiftyfiveApiClientError(Exception):
@@ -118,11 +149,35 @@ class FiftyfiveApiClient:
             customer_type=customer_type,
         )
 
+    @property
+    def base_url(self) -> str:
+        """Return the portal base URL this client talks to."""
+        return self._api.url
+
+    def current_cookies(self) -> dict[str, str]:
+        """
+        Return the current portal session cookies as ``{name: value}``.
+
+        Used to persist the freshest session cookies (which the portal may
+        rotate over the life of the ~24h session) back into the config entry so
+        that a Home Assistant restart reuses a still-valid session instead of
+        the possibly-stale cookie captured during initial setup.
+        """
+        return extract_cookies_for_url(self._api.session, self._api.url)
+
     async def async_get_data(self) -> Any:
         """Get data from the API."""
         networks = await self._api.make_requests([NetworkOverview()])
+        # When the session has expired (or was never authenticated) the portal
+        # answers the API with an empty ``[]`` instead of the usual
+        # ``[[ {charger}, ... ]]`` payload.  Treat that as an authentication
+        # failure so the coordinator can raise ``ConfigEntryAuthFailed`` and
+        # Home Assistant starts the re-authentication flow (the user then
+        # supplies a fresh e-mailed 2FA code).  We deliberately only test the
+        # outer list: a genuinely charger-less (but authenticated) account
+        # returns ``[[]]`` and must not be forced into a reauth loop.
         if not networks:
-            msg = "Invalid credentials"
+            msg = "Session expired or invalid credentials"
             raise FiftyfiveApiClientAuthenticationError(msg)
 
         details = await self._api.make_requests(
@@ -159,6 +214,30 @@ class FiftyfiveApiClient:
                 )
 
         return merged
+
+    async def async_get_power_history(self) -> dict[str, list[float | None]]:
+        """
+        Fetch the hourly charging-power history for every charger.
+
+        Uses the dashboard ``current`` service in ``mode=3`` which returns an
+        hourly kW time-series covering roughly the last three days (this is the
+        deepest power history the portal exposes).  The result maps each
+        charger IDX to its power series ordered oldest -> newest; the caller
+        maps these onto hour-aligned timestamps to backfill HA statistics.
+        """
+        networks = await self._api.make_requests([NetworkOverview()])
+        if not networks:
+            msg = "Invalid credentials"
+            raise FiftyfiveApiClientAuthenticationError(msg)
+
+        idxs = [network["IDX"] for network in networks[0]]
+        graphs = await self._api.make_requests(
+            [Current(recharge_spot_ids=[idx], mode=3) for idx in idxs]
+        )
+        history: dict[str, list[float | None]] = {}
+        for idx, graph in zip(idxs, graphs, strict=False):
+            history[idx] = extract_power_series(graph)
+        return history
 
     async def async_start(self, charger: str, card_id: str) -> Any:
         """Start charge session."""

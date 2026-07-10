@@ -12,7 +12,7 @@
             },
             "2fa": {
                 "title": "Two-factor authentication",
-                "description": "A one-time verification code has been e-mailed to your 50five account ({username}). Enter the code below to finish signing in.",
+                "description": "A one-time verification code has been e-mailed to your 50five account ({username}). Enter the code below to finish signing in. The portal keeps the session valid for about 24 hours; when it expires Home Assistant will ask you to re-authenticate with a fresh code.",
                 "data": {
                     "auth_code": "Verification code"
                 }

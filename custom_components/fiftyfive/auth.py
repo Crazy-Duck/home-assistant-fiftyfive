@@ -173,6 +173,19 @@ def extract_cookies(session: ClientSession) -> dict[str, str]:
     return {cookie.key: cookie.value for cookie in session.cookie_jar}
 
 
+def extract_cookies_for_url(session: ClientSession, base_url: str) -> dict[str, str]:
+    """
+    Extract only the cookies that apply to ``base_url`` from the jar.
+
+    At runtime the integration reuses Home Assistant's *shared* aiohttp
+    session, whose cookie jar may also hold cookies from other integrations.
+    Filtering by the portal URL makes sure we only ever read (and later
+    persist) the 50five session cookies.
+    """
+    filtered = session.cookie_jar.filter_cookies(URL(base_url))
+    return {name: morsel.value for name, morsel in filtered.items()}
+
+
 def seed_cookies(
     session: ClientSession, base_url: str, cookies: dict[str, str]
 ) -> None:

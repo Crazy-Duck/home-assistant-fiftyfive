@@ -104,7 +104,14 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             type=selector.TextSelectorType.TEXT,
                         ),
                     ),
-                    vol.Required(CONF_PASSWORD): selector.TextSelector(
+                    vol.Required(
+                        CONF_PASSWORD,
+                        # Pre-fill on re-authentication so the user can just
+                        # confirm and move straight on to the fresh 2FA code.
+                        default=(user_input or self._login_input or {}).get(
+                            CONF_PASSWORD, vol.UNDEFINED
+                        ),
+                    ): selector.TextSelector(
                         selector.TextSelectorConfig(
                             type=selector.TextSelectorType.PASSWORD,
                         ),

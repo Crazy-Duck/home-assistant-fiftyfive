@@ -53,12 +53,37 @@ step process:
 Once the code is accepted the integration stores the authenticated session so
 that normal polling does **not** require a new code.
 
+#### How long does the session last?
+
+The 50five portal keeps a session valid for about **24 hours** after the 2FA
+step (`PHPSESSID` cookie, `Max-Age=86400`). To make the session last as long as
+possible the integration:
+
+* **Reuses** the stored session cookies for all polling (no new code needed
+  between polls).
+* **Persists the freshest cookies** after every successful poll, so a Home
+  Assistant restart within the 24h window keeps working without a new code
+  (rather than falling back to the possibly-stale cookie captured at setup).
+
+#### What happens when the session expires?
+
+On every poll the integration verifies it can still fetch data from the portal.
+When the session has expired the portal stops returning data, and the
+integration:
+
+1. Raises an authentication failure, which makes Home Assistant show a
+   **"Reconfigure" / re-authentication** repair notification for the
+   integration (the entities go *unavailable* rather than silently showing
+   stale data).
+2. Lets you re-authenticate: open the notification, confirm your (pre-filled)
+   password and enter the **new verification code** that 50five e-mails you.
+   Polling resumes automatically.
+
 > [!NOTE]
 > Because the verification code is delivered by e-mail it cannot be obtained
-> unattended. If the stored session eventually expires, Home Assistant will
-> raise a **"Reconfigure"/re-authentication** notification for the integration.
-> Simply open it, re-enter your password and the new code that 50five e-mails
-> you. Accounts without 2FA continue to work with a single step as before.
+> unattended, so this ~24h re-authentication is expected and cannot be fully
+> automated. Accounts without 2FA continue to work with a single step as
+> before.
 
 ### Actions
 
@@ -100,6 +125,97 @@ card/charger/channel combos you prefer. The process is pretty simple:
 
 The switch will now show up in the `Overview` dashboard. Additionally you can
 assign it an area in the house in its settings.
+
+## Power usage history
+
+The charging-power sensor is backfilled with Home Assistant long-term
+statistics using the same data the 50five portal graphs (its dashboard
+`current` service). On startup and hourly thereafter the integration imports
+the portal's hourly power history so the sensor's *Statistics* graph shows the
+recent past.
+
+Note: the portal only exposes roughly the **last three days** of hourly power
+data, so that is as far back as the history can be filled. Older history simply
+isn't available from 50five.
+
+## Update notifications
+
+When a newer release of this integration is available on GitHub (`pimhofstee/50five-HA-2fa`), you'll get notified in **two ways**:
+
+### 🔔 Automatic notification (no setup needed)
+A notification appears automatically in your **Home Assistant notification center** with:
+- Installed and latest version numbers
+- Link to the release notes on GitHub
+
+The notification **auto-dismisses** when you update to the latest version.
+
+### 📊 Binary sensor (for custom automations)
+The integration also provides a **binary sensor** (`binary_sensor.fiftyfive_update_available`) that turns **ON** when a newer release is available. The sensor's attributes include:
+- `installed_version` — your current version
+- `latest_version` — latest version on GitHub
+- `release_url` — link to the release page
+
+Use this sensor to build custom automations (send mobile notifications, flash lights, add to dashboards, etc.).
+
+Both features check at **startup + once every 24 hours**. Update via HACS as usual.
+
+**Example automations:**
+
+**Send a persistent notification:**
+```yaml
+automation:
+  - alias: "Notify when 50five update available"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.fiftyfive_update_available
+        to: "on"
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "50five update available"
+          message: >
+            Installed: {{ state_attr('binary_sensor.fiftyfive_update_available', 'installed_version') }}
+            Latest: {{ state_attr('binary_sensor.fiftyfive_update_available', 'latest_version') }}
+            
+            [View release]({{ state_attr('binary_sensor.fiftyfive_update_available', 'release_url') }})
+```
+
+**Send mobile notification:**
+```yaml
+automation:
+  - alias: "Mobile notification for 50five update"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.fiftyfive_update_available
+        to: "on"
+    action:
+      - service: notify.mobile_app_your_phone
+        data:
+          title: "50five update available"
+          message: "Version {{ state_attr('binary_sensor.fiftyfive_update_available', 'latest_version') }} is now available!"
+          data:
+            url: "{{ state_attr('binary_sensor.fiftyfive_update_available', 'release_url') }}"
+```
+
+**Flash a dashboard light:**
+```yaml
+automation:
+  - alias: "Flash light for 50five update"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.fiftyfive_update_available
+        to: "on"
+    action:
+      - service: light.turn_on
+        target:
+          entity_id: light.office
+        data:
+          rgb_color: [255, 165, 0]
+          flash: short
+```
+
+**Add to dashboard:**
+Simply add `binary_sensor.fiftyfive_update_available` to any Lovelace card. It will show ON/OFF status and the installed/latest version attributes.
 
 ## Word of caution
 

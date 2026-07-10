@@ -12,7 +12,7 @@
             },
             "2fa": {
                 "title": "Authentification à deux facteurs",
-                "description": "Un code de vérification à usage unique a été envoyé par e-mail à votre compte 50five ({username}). Saisissez le code ci-dessous pour terminer la connexion.",
+                "description": "Un code de vérification à usage unique a été envoyé par e-mail à votre compte 50five ({username}). Saisissez le code ci-dessous pour terminer la connexion. Le portail conserve la session valide pendant environ 24 heures ; à son expiration, Home Assistant vous demandera de vous ré-authentifier avec un nouveau code.",
                 "data": {
                     "auth_code": "Code de vérification"
                 }
