@@ -52,15 +52,18 @@ async def async_check_for_update(
     a persistent notification in HA's notification center when a newer version
     exists. The notification auto-dismisses when you're on the latest version.
 
-    Best effort: network/parse errors are logged at debug level and never
-    propagate, so this can be scheduled safely in the background.
+    Best effort: network/parse errors are logged and never propagate, so this
+    can be scheduled safely in the background.
     """
     state = entry.runtime_data.update_state
     installed_raw = str(entry.runtime_data.integration.version)
     installed = _normalise(installed_raw)
     state["installed"] = installed
+    
+    LOGGER.info("50five update check started (installed: %s)", installed)
+    
     if installed is None:
-        LOGGER.debug("Installed 50five version unknown; skipping update check")
+        LOGGER.warning("Installed 50five version unknown; skipping update check")
         return
 
     session = async_get_clientsession(hass)
@@ -71,13 +74,14 @@ async def async_check_for_update(
             timeout=_REQUEST_TIMEOUT,
         ) as response:
             if response.status != 200:  # noqa: PLR2004
-                LOGGER.debug(
+                LOGGER.warning(
                     "GitHub release check returned HTTP %s", response.status
                 )
                 return
             payload = await response.json()
-    except Exception:  # noqa: BLE001 - best effort background task
-        LOGGER.debug("Failed to check GitHub for updates", exc_info=True)
+            LOGGER.debug("GitHub API response: %s", payload.get("tag_name"))
+    except Exception as err:  # noqa: BLE001 - best effort background task
+        LOGGER.warning("Failed to check GitHub for updates: %s", err, exc_info=True)
         return
 
     latest = _normalise(payload.get("tag_name") or payload.get("name"))
@@ -85,7 +89,7 @@ async def async_check_for_update(
     state["latest"] = latest
     state["release_url"] = release_url
     if latest is None:
-        LOGGER.debug("GitHub release payload had no usable version")
+        LOGGER.warning("GitHub release payload had no usable version")
         return
 
     try:
@@ -96,22 +100,35 @@ async def async_check_for_update(
         LOGGER.debug("Non-semver version compare: %s vs %s", latest, installed)
 
     if is_newer:
-        LOGGER.info("A new 50five release is available: %s", latest)
-        persistent_notification.async_create(
-            hass,
-            (
-                f"A new version of the **50five** integration is available.\n\n"
-                f"- Installed: `{installed}`\n"
-                f"- Latest: `{latest}`\n\n"
-                f"Update via HACS, or view the release notes "
-                f"[on GitHub]({release_url})."
-            ),
-            title="50five update available",
-            notification_id=UPDATE_NOTIFICATION_ID,
+        LOGGER.info(
+            "A new 50five release is available: %s (installed: %s)",
+            latest,
+            installed,
         )
+        try:
+            persistent_notification.async_create(
+                hass,
+                (
+                    f"A new version of the **50five** integration is available.\n\n"
+                    f"- Installed: `{installed}`\n"
+                    f"- Latest: `{latest}`\n\n"
+                    f"Update via HACS, or view the release notes "
+                    f"[on GitHub]({release_url})."
+                ),
+                title="50five update available",
+                notification_id=UPDATE_NOTIFICATION_ID,
+            )
+            LOGGER.info("Update notification created (ID: %s)", UPDATE_NOTIFICATION_ID)
+        except Exception as err:  # noqa: BLE001
+            LOGGER.error(
+                "Failed to create update notification: %s", err, exc_info=True
+            )
     else:
-        LOGGER.debug(
+        LOGGER.info(
             "50five up to date (installed %s, latest %s)", installed, latest
         )
         # Clear any stale notification from a previous (now-installed) update.
-        persistent_notification.async_dismiss(hass, UPDATE_NOTIFICATION_ID)
+        try:
+            persistent_notification.async_dismiss(hass, UPDATE_NOTIFICATION_ID)
+        except Exception as err:  # noqa: BLE001
+            LOGGER.debug("Failed to dismiss notification: %s", err)

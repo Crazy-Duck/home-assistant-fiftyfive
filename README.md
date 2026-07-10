@@ -85,6 +85,48 @@ integration:
 > automated. Accounts without 2FA continue to work with a single step as
 > before.
 
+### Update notifications
+
+The integration automatically checks for new releases on GitHub once every 24
+hours (starting when the integration loads). When a newer version is available:
+
+* A **notification appears in Home Assistant's notification center** with the
+  installed and latest version numbers, and a link to the release notes.
+* The `binary_sensor.<charger>_update_available` sensor turns **ON**.
+
+The notification automatically dismisses itself once you update to the latest
+version.
+
+#### Troubleshooting update notifications
+
+If you've updated the integration but the notification still shows an old
+version, or no notification appears at all:
+
+1. **Check the logs** for `50five update check` entries:
+   - Go to **Settings** → **System** → **Logs**
+   - Search for `50five`
+   - Look for messages like:
+     * `50five update check started (installed: X.X.X)`
+     * `A new 50five release is available: X.X.X`
+     * `Update notification created`
+
+2. **Verify the installed version**:
+   - The integration reads the version from its own `manifest.json`
+   - If you installed manually, make sure you copied **all files** including
+     the updated manifest
+   - HACS users: the version should update automatically after clicking
+     "Update" and restarting
+
+3. **Trigger a manual check**:
+   - Restart Home Assistant (the update check runs on startup)
+   - Or wait up to 24 hours for the next automatic check
+
+4. **Check GitHub API access**:
+   - The integration queries
+     `https://api.github.com/repos/pimhofstee/50five-HA-2fa/releases/latest`
+   - If your Home Assistant instance has no internet access or GitHub is
+     unreachable, the check will fail silently (logged at WARNING level)
+
 ### Actions
 
 #### Available service actions
