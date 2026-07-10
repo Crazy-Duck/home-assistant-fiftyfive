@@ -47,7 +47,15 @@ ENTITY_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda network: network["MOM_POWER_KW"] or 0,
+        # ``MOM_POWER_KW`` is unreliable and often reads 0/null even while
+        # charging (upstream issue #27).  Prefer it when it actually carries a
+        # value, otherwise fall back to ``LIVE_POWER_KW`` which is derived from
+        # the portal's own charging-power graph (the ``current`` service).
+        value_fn=lambda network: (
+            network.get("MOM_POWER_KW")
+            or network.get("LIVE_POWER_KW")
+            or 0
+        ),
     ),
     FiftyfiveSensorEntityDescription(
         key="transaction_energy_delivered",
@@ -68,7 +76,10 @@ ENTITY_DESCRIPTIONS = (
     FiftyfiveSensorEntityDescription(
         key="transaction_card",
         translation_key="transaction_card",
-        value_fn=lambda network: network["CARDID"],
+        # When no session is active the portal returns an empty CARDID which
+        # would surface as "unknown"/"onbekend" in Home Assistant. Show a
+        # clear "Geen" (none) value instead.
+        value_fn=lambda network: network["CARDID"] or "Geen",
     ),
     FiftyfiveSensorEntityDescription(
         key="status",

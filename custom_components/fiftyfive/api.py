@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 from fiftyfive import (
@@ -10,6 +11,7 @@ from fiftyfive import (
     CardSearch,
     Channel,
     ClientSearch,
+    Current,
     CustomerType,
     HardReset,
     Market,
@@ -24,6 +26,54 @@ from fiftyfive import (
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
+
+_LOGGER = logging.getLogger(__name__)
+
+
+def extract_latest_power(graph: Any) -> float | None:
+    """
+    Extract the most recent live power (kW) from a ``current`` graph response.
+
+    The 50five portal renders its charging-power graph from the dashboard
+    ``current`` service instead of the ``MOM_POWER_KW`` field returned by the
+    ``overview`` service.  ``MOM_POWER_KW`` is unreliable and frequently reports
+    ``0``/``null`` even while a session is active (see upstream issue #27), so
+    we derive a value from the same data source the portal itself graphs.
+
+    The ``current`` response looks like::
+
+        {
+            "labels": ["03:00", "03:15", ...],
+            "datasets": {
+                "1":        {"values": [...], "unit": "kW"},
+                "1_count":  {"values": [...], "unit": ""}
+            }
+        }
+
+    We return the most recent non-null value of the kW dataset (the last time
+    bin, i.e. "now"), or ``None`` when no usable value is present.
+    """
+    if not isinstance(graph, dict):
+        return None
+    datasets = graph.get("datasets")
+    if not isinstance(datasets, dict):
+        return None
+
+    for key, dataset in datasets.items():
+        # The companion "<channel>_count" series holds transaction counts, not
+        # power, so skip it and only consider the kW dataset.
+        if str(key).endswith("_count"):
+            continue
+        if not isinstance(dataset, dict) or dataset.get("unit") != "kW":
+            continue
+        values = dataset.get("values") or []
+        for value in reversed(values):
+            if value is not None:
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    return None
+    return None
 
 
 class FiftyfiveApiClientError(Exception):
@@ -79,7 +129,36 @@ class FiftyfiveApiClient:
             [Overview(network["IDX"]) for network in networks[0]]
         )
 
-        return [c | d[0] for c, d in zip(networks[0], details, strict=True)]
+        merged = [c | d[0] for c, d in zip(networks[0], details, strict=True)]
+
+        # ``MOM_POWER_KW`` (from the overview service) is unreliable and often
+        # reports 0/null even while charging.  The portal itself draws its
+        # charging-power graph from the dashboard ``current`` service, so we
+        # fetch that too and expose the latest value as ``LIVE_POWER_KW`` which
+        # the sensor uses as a fallback.  Failures here must never break the
+        # regular data update, so they are caught and logged.
+        try:
+            currents = await self._api.make_requests(
+                [
+                    Current(recharge_spot_ids=[network["IDX"]], mode=1)
+                    for network in merged
+                ]
+            )
+        except Exception:  # noqa: BLE001 - best effort, never break polling
+            _LOGGER.debug("Failed to fetch 'current' power graph", exc_info=True)
+        else:
+            for network, graph in zip(merged, currents, strict=False):
+                live_power = extract_latest_power(graph)
+                network["LIVE_POWER_KW"] = live_power
+                _LOGGER.debug(
+                    "Charger %s: MOM_POWER_KW=%s LIVE_POWER_KW=%s STATUS=%s",
+                    network.get("IDX"),
+                    network.get("MOM_POWER_KW"),
+                    live_power,
+                    network.get("STATUS"),
+                )
+
+        return merged
 
     async def async_start(self, charger: str, card_id: str) -> Any:
         """Start charge session."""
