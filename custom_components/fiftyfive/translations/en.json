@@ -162,7 +162,7 @@
         },
         "import_power_history": {
             "name": "Import power history",
-            "description": "Manually import the last ~3 days of charging power history from the 50five portal into Home Assistant statistics, including the current (incomplete) hour. This fills gaps in the power sensor's history graph."
+            "description": "Manually import the last ~3 days of completed charging power history from the 50five portal into Home Assistant statistics. This fills gaps in the power sensor's history graph. The current (incomplete) hour is skipped; Home Assistant records that itself."
         },
         "check_for_update": {
             "name": "Check for update",

@@ -133,7 +133,6 @@ def _parse_label(label: str, now: datetime) -> datetime | None:
 def _series_to_statistics(
     series: list[float | None],
     labels: list[str] | None = None,
-    include_current_hour: bool = False,
 ) -> list[dict]:
     """
     Map an hourly power series (oldest -> newest) onto hour-aligned statistics.
@@ -148,13 +147,19 @@ def _series_to_statistics(
     history graph stays continuous instead of showing gaps when the car was
     not charging.
 
+    The current (incomplete) hour is ALWAYS skipped.  The power sensor has
+    ``state_class = measurement``, so Home Assistant's recorder compiles its
+    own long-term statistics for the same ``statistic_id`` from live states.
+    If we imported the current hour, the recorder would - at the next hour
+    boundary - try to insert its own compiled row for that very hour and hit a
+    ``UNIQUE constraint failed: statistics.metadata_id, statistics.start_ts``
+    error.  Older hours are safe: either the recorder already compiled them
+    (``async_import_statistics`` then simply updates the existing row) or it
+    never will (e.g. Home Assistant was down), so there is no future clash.
+
     Args:
         series: Hourly power values (kW), oldest to newest.
         labels: Portal labels aligned with ``series`` (oldest to newest).
-        include_current_hour: If True, include the incomplete current hour in
-            the statistics. Useful for manual backfills so today's data shows
-            up immediately; normally False for the hourly background import to
-            avoid fighting the recorder's own live compilation.
     """
     if not series:
         return []
@@ -178,8 +183,10 @@ def _series_to_statistics(
             start = current_hour - timedelta(hours=(count - 1 - index))
         # Normalize to the top of the hour.
         start = start.replace(minute=0, second=0, microsecond=0)
-        # Skip the current (incomplete) hour unless explicitly requested.
-        if not include_current_hour and start >= current_hour:
+        # Always skip the current (incomplete) hour: the recorder compiles that
+        # hour itself and a pre-inserted row would cause a UNIQUE-constraint
+        # clash when it does.
+        if start >= current_hour:
             continue
         # Idle hours -> 0 kW so the graph stays continuous.
         reading = 0.0 if value is None else value
@@ -197,18 +204,18 @@ def _series_to_statistics(
 async def async_import_power_history(
     hass: HomeAssistant,
     entry: FiftyfiveConfigEntry,
-    include_current_hour: bool = False,
 ) -> None:
     """
     Fetch the portal power history and import it into HA statistics.
 
+    Only completed past hours are imported; the current (incomplete) hour is
+    always skipped because the recorder compiles that hour itself and a
+    pre-inserted row would cause a UNIQUE-constraint clash.  This applies to
+    both the automatic hourly import and the manual service.
+
     Args:
         hass: Home Assistant instance.
         entry: The 50five config entry.
-        include_current_hour: If True, import the incomplete current hour too.
-            Normally False for automatic hourly imports (to avoid fighting the
-            recorder), but can be True for manual backfills to ensure today's
-            data is visible immediately.
 
     Best effort: any failure is logged and swallowed so it can never break the
     integration setup or polling.
@@ -245,7 +252,7 @@ async def async_import_power_history(
             )
             continue
 
-        statistics = _series_to_statistics(series, labels, include_current_hour)
+        statistics = _series_to_statistics(series, labels)
         if not statistics:
             LOGGER.info(
                 "50five power history for charger %s produced no statistics "
@@ -271,7 +278,6 @@ async def async_import_power_history(
             )
 
     LOGGER.info(
-        "50five power history import completed: %d statistics imported%s",
+        "50five power history import completed: %d statistics imported",
         imported_count,
-        " (manual, incl. current hour)" if include_current_hour else "",
     )
