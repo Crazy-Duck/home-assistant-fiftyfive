@@ -15,7 +15,8 @@ and new fields so the integration keeps working across HA versions.
 
 from __future__ import annotations
 
-from datetime import timedelta
+import re
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from homeassistant.components.recorder.statistics import async_import_statistics
@@ -24,6 +25,27 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
+
+# Month-abbreviation -> month-number map covering the portal locales the
+# integration supports (nl / en / fr).  The portal renders mode=3 labels like
+# ``"07-jul. 06:00"`` using the account's locale, so we accept all of them.
+_MONTHS: dict[str, int] = {
+    # Dutch
+    "jan": 1, "feb": 2, "mrt": 3, "apr": 4, "mei": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "okt": 10, "nov": 11, "dec": 12,
+    # English (only the ones that differ from the above)
+    "mar": 3, "may": 5, "oct": 10,
+    # French (only the ones that differ from the above)
+    "janv": 1, "fevr": 2, "févr": 2, "mars": 3, "avr": 4, "juin": 6,
+    "juil": 7, "aout": 8, "août": 8, "sept": 9, "dec.": 12, "déc": 12,
+}
+
+# Matches labels such as "07-jul. 06:00" -> day, month-abbr, hour, minute.
+_LABEL_RE = re.compile(
+    r"(?P<day>\d{1,2})\s*[-/ ]\s*(?P<mon>[^\W\d_]+)\.?\s+"
+    r"(?P<hour>\d{1,2}):(?P<minute>\d{2})",
+    re.UNICODE,
+)
 
 # The recorder statistics API changed over time.  Import the new
 # ``StatisticMeanType`` enum when available so we can populate ``mean_type``
@@ -64,42 +86,100 @@ def _build_metadata(entity_id: str) -> dict:
     return metadata
 
 
+def _parse_label(label: str, now: datetime) -> datetime | None:
+    """
+    Parse a portal ``mode=3`` label like ``"07-jul. 06:00"`` into a datetime.
+
+    The label carries day, localized month abbreviation and time but no year,
+    so the year is inferred from ``now`` (rolling back a year when the parsed
+    month lies in the future, which only happens around New Year).  The result
+    is timezone-aware in Home Assistant's local zone, matching the local time
+    the portal renders.  Returns ``None`` when the label cannot be parsed.
+    """
+    match = _LABEL_RE.search(label)
+    if not match:
+        return None
+    mon_key = match.group("mon").lower().rstrip(".")
+    month = _MONTHS.get(mon_key)
+    if month is None:
+        return None
+    try:
+        day = int(match.group("day"))
+        hour = int(match.group("hour"))
+        minute = int(match.group("minute"))
+    except (TypeError, ValueError):
+        return None
+
+    year = now.year
+    # Handle the year boundary: a month far ahead of "now" belongs to last year.
+    if month > now.month + 1:
+        year -= 1
+    try:
+        naive = datetime(year, month, day, hour, minute)
+    except ValueError:
+        return None
+    return naive.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+
 def _series_to_statistics(
-    series: list[float | None], include_current_hour: bool = False
+    series: list[float | None],
+    labels: list[str] | None = None,
+    include_current_hour: bool = False,
 ) -> list[dict]:
     """
     Map an hourly power series (oldest -> newest) onto hour-aligned statistics.
 
-    The ``current`` mode=3 graph is a rolling window of hourly bins whose last
-    bin is the current hour.  Timestamps are reconstructed from "now" instead
-    of parsing the portal's locale-specific labels.
+    Timestamps come from the portal's own ``mode=3`` labels when available
+    (e.g. ``"07-jul. 06:00"``), so each reading lands on its exact hour
+    regardless of clock skew or time zone.  When labels are missing or cannot
+    be parsed, timestamps fall back to being reconstructed from "now" assuming
+    the last bin is the current hour.
+
+    Idle hours (a ``None`` reading) are recorded as ``0`` kW so the power
+    history graph stays continuous instead of showing gaps when the car was
+    not charging.
 
     Args:
         series: Hourly power values (kW), oldest to newest.
+        labels: Portal labels aligned with ``series`` (oldest to newest).
         include_current_hour: If True, include the incomplete current hour in
-            the statistics. This is useful for manual imports/backfills to
-            ensure today's data is visible, but normally False to avoid
-            fighting the recorder's own live compilation.
+            the statistics. Useful for manual backfills so today's data shows
+            up immediately; normally False for the hourly background import to
+            avoid fighting the recorder's own live compilation.
     """
     if not series:
         return []
 
-    current_hour = dt_util.now().replace(minute=0, second=0, microsecond=0)
+    now = dt_util.now()
+    current_hour = now.replace(minute=0, second=0, microsecond=0)
     count = len(series)
+
+    # Try to build timestamps from the portal labels first (robust across
+    # time zones); fall back to reconstruction from "now" per-bin.
+    parsed: list[datetime | None] = []
+    if labels and len(labels) == count:
+        parsed = [_parse_label(lbl, now) for lbl in labels]
+    parsed_ok = any(ts is not None for ts in parsed)
+
     statistics: list[dict] = []
     for index, value in enumerate(series):
-        start = current_hour - timedelta(hours=(count - 1 - index))
-        # Skip the current incomplete hour unless explicitly requested
+        start: datetime | None = parsed[index] if parsed_ok else None
+        if start is None:
+            # Fallback: assume hourly bins ending at the current hour.
+            start = current_hour - timedelta(hours=(count - 1 - index))
+        # Normalize to the top of the hour.
+        start = start.replace(minute=0, second=0, microsecond=0)
+        # Skip the current (incomplete) hour unless explicitly requested.
         if not include_current_hour and start >= current_hour:
             continue
-        if value is None:
-            continue
+        # Idle hours -> 0 kW so the graph stays continuous.
+        reading = 0.0 if value is None else value
         statistics.append(
             {
                 "start": start,
-                "mean": value,
-                "min": value,
-                "max": value,
+                "mean": reading,
+                "min": reading,
+                "max": reading,
             }
         )
     return statistics
@@ -128,38 +208,54 @@ async def async_import_power_history(
     try:
         history = await client.async_get_power_history()
     except Exception:  # noqa: BLE001 - best effort background task
-        LOGGER.debug("Could not fetch 50five power history", exc_info=True)
+        LOGGER.warning("Could not fetch 50five power history", exc_info=True)
+        return
+
+    if not history:
+        LOGGER.info("50five power history import: portal returned no chargers")
         return
 
     registry = er.async_get(hass)
     imported_count = 0
-    for idx, series in history.items():
+    for idx, (labels, series) in history.items():
         entity_id = registry.async_get_entity_id(
             "sensor", DOMAIN, f"{idx}_{_POWER_KEY}"
         )
         if entity_id is None:
-            LOGGER.debug("No power entity registered yet for charger %s", idx)
+            LOGGER.warning(
+                "No power sensor registered yet for charger %s; "
+                "skipping history import",
+                idx,
+            )
             continue
 
-        statistics = _series_to_statistics(series, include_current_hour)
+        statistics = _series_to_statistics(series, labels, include_current_hour)
         if not statistics:
+            LOGGER.info(
+                "50five power history for charger %s produced no statistics "
+                "(series length %d)",
+                idx,
+                len(series),
+            )
             continue
 
-        LOGGER.debug(
-            "Importing %d hourly power statistics for %s",
-            len(statistics),
-            entity_id,
-        )
         try:
             async_import_statistics(hass, _build_metadata(entity_id), statistics)
             imported_count += len(statistics)
+            LOGGER.info(
+                "Imported %d hourly power statistics for %s (%s -> %s)",
+                len(statistics),
+                entity_id,
+                statistics[0]["start"].isoformat(),
+                statistics[-1]["start"].isoformat(),
+            )
         except Exception:  # noqa: BLE001 - never break the background task
-            LOGGER.debug(
+            LOGGER.warning(
                 "Failed to import power statistics for %s", entity_id, exc_info=True
             )
 
-    if include_current_hour and imported_count > 0:
-        LOGGER.info(
-            "Manual power history import completed: %d statistics imported",
-            imported_count,
-        )
+    LOGGER.info(
+        "50five power history import completed: %d statistics imported%s",
+        imported_count,
+        " (manual, incl. current hour)" if include_current_hour else "",
+    )

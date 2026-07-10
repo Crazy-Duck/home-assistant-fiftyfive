@@ -176,9 +176,39 @@ statistics using the same data the 50five portal graphs (its dashboard
 the portal's hourly power history so the sensor's *Statistics* graph shows the
 recent past.
 
+Each hourly reading is placed on its exact timestamp using the portal's own
+graph labels (e.g. `07-jul. 06:00`), so the history lines up correctly even if
+Home Assistant's clock or time zone differs slightly from the portal. Hours in
+which the car wasn't charging are recorded as **0 kW**, so the graph stays
+continuous instead of showing gaps.
+
 Note: the portal only exposes roughly the **last three days** of hourly power
 data, so that is as far back as the history can be filled. Older history simply
 isn't available from 50five.
+
+### Manually re-importing history
+
+If the *Statistics* graph looks empty or has gaps (for example right after a
+Home Assistant restart, or after the integration was offline for a while), you
+can force an import that also includes the current hour:
+
+1. Go to **Developer Tools → Actions** (Services)
+2. Select **50five: Import power history** (`fiftyfive.import_power_history`)
+3. Press **Perform action**
+
+Check **Settings → System → Logs** for a line like
+`50five power history import completed: N statistics imported` to confirm it
+ran. These import logs are now at INFO level so you can see exactly what was
+imported (and why, if nothing was).
+
+### Integration up-to-date status
+
+Besides the notification and binary sensor described below, the integration now
+also exposes a first-class **Update** entity
+(`update.fiftyfive_integration_update`). It is always visible on the 50five
+device and shows the installed version versus the latest release, so you can
+tell at a glance whether you're up to date. Updating itself is still done
+through HACS.
 
 ## Update notifications
 

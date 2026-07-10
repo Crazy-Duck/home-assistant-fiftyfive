@@ -108,6 +108,24 @@ def extract_power_series(graph: Any) -> list[float | None]:
     return series
 
 
+def extract_power_labels(graph: Any) -> list[str]:
+    """
+    Return the label list (oldest -> newest) from a ``current`` graph response.
+
+    For ``mode=3`` the portal labels carry the real per-hour timestamp in the
+    account's local time, e.g. ``"07-jul. 06:00"``.  The statistics importer
+    parses these so each reading is placed on its exact hour instead of being
+    reconstructed from "now" (which is fragile across time zones and clock
+    skew).
+    """
+    if not isinstance(graph, dict):
+        return []
+    labels = graph.get("labels")
+    if not isinstance(labels, list):
+        return []
+    return [str(label) for label in labels]
+
+
 class FiftyfiveApiClientError(Exception):
     """Exception to indicate a general API error."""
 
@@ -216,15 +234,20 @@ class FiftyfiveApiClient:
 
         return merged
 
-    async def async_get_power_history(self) -> dict[str, list[float | None]]:
+    async def async_get_power_history(
+        self,
+    ) -> dict[str, tuple[list[str], list[float | None]]]:
         """
         Fetch the hourly charging-power history for every charger.
 
         Uses the dashboard ``current`` service in ``mode=3`` which returns an
         hourly kW time-series covering roughly the last three days (this is the
         deepest power history the portal exposes).  The result maps each
-        charger IDX to its power series ordered oldest -> newest; the caller
-        maps these onto hour-aligned timestamps to backfill HA statistics.
+        charger IDX to a ``(labels, values)`` tuple ordered oldest -> newest.
+
+        The ``labels`` carry the portal's own timestamps (e.g. ``"07-jul.
+        04:00"``); the caller uses them to place each reading on the correct
+        hour instead of guessing from "now", which avoids gaps/misalignment.
         """
         networks = await self._api.make_requests([NetworkOverview()])
         if not networks:
@@ -235,9 +258,9 @@ class FiftyfiveApiClient:
         graphs = await self._api.make_requests(
             [Current(recharge_spot_ids=[idx], mode=3) for idx in idxs]
         )
-        history: dict[str, list[float | None]] = {}
+        history: dict[str, tuple[list[str], list[float | None]]] = {}
         for idx, graph in zip(idxs, graphs, strict=False):
-            history[idx] = extract_power_series(graph)
+            history[idx] = (extract_power_labels(graph), extract_power_series(graph))
         return history
 
     async def async_start(self, charger: str, card_id: str) -> Any:
