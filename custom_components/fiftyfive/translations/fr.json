@@ -159,6 +159,10 @@
                     "description": "Borne à débloquer."
                 }
             }
+        },
+        "import_power_history": {
+            "name": "Importer l'historique de puissance",
+            "description": "Importer manuellement les ~3 derniers jours d'historique de puissance de recharge depuis le portail 50five vers les statistiques Home Assistant, y compris l'heure actuelle (incomplète). Cela comble les lacunes dans le graphique d'historique du capteur de puissance."
         }
     }
 }

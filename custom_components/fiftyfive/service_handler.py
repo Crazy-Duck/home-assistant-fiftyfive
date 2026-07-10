@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
+from .statistics import async_import_power_history
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -172,3 +173,13 @@ class ChargerServiceHandler:
             await entry.runtime_data.coordinator.start_fast_polling()
 
         await self._do_action_on_device(device_id=device_id, action=action)
+
+    async def handle_import_power_history(self, call: ServiceCall) -> None:
+        """Handle the import_power_history service call."""
+        LOGGER.info("Manual power history import requested")
+        
+        # Import for all 50five config entries
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            await async_import_power_history(
+                self.hass, entry, include_current_hour=True
+            )

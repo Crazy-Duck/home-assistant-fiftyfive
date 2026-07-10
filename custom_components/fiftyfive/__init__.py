@@ -83,6 +83,9 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "unlock_connector", handler.handle_unlock)
     hass.services.async_register(DOMAIN, "block_charger", handler.handle_block)
     hass.services.async_register(DOMAIN, "unblock_charger", handler.handle_unblock)
+    hass.services.async_register(
+        DOMAIN, "import_power_history", handler.handle_import_power_history
+    )
 
     return True
 

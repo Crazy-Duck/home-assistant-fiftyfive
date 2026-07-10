@@ -64,14 +64,22 @@ def _build_metadata(entity_id: str) -> dict:
     return metadata
 
 
-def _series_to_statistics(series: list[float | None]) -> list[dict]:
+def _series_to_statistics(
+    series: list[float | None], include_current_hour: bool = False
+) -> list[dict]:
     """
     Map an hourly power series (oldest -> newest) onto hour-aligned statistics.
 
     The ``current`` mode=3 graph is a rolling window of hourly bins whose last
     bin is the current hour.  Timestamps are reconstructed from "now" instead
-    of parsing the portal's locale-specific labels.  The current (incomplete)
-    hour is skipped so we never fight the recorder's own live compilation.
+    of parsing the portal's locale-specific labels.
+
+    Args:
+        series: Hourly power values (kW), oldest to newest.
+        include_current_hour: If True, include the incomplete current hour in
+            the statistics. This is useful for manual imports/backfills to
+            ensure today's data is visible, but normally False to avoid
+            fighting the recorder's own live compilation.
     """
     if not series:
         return []
@@ -81,7 +89,10 @@ def _series_to_statistics(series: list[float | None]) -> list[dict]:
     statistics: list[dict] = []
     for index, value in enumerate(series):
         start = current_hour - timedelta(hours=(count - 1 - index))
-        if start >= current_hour or value is None:
+        # Skip the current incomplete hour unless explicitly requested
+        if not include_current_hour and start >= current_hour:
+            continue
+        if value is None:
             continue
         statistics.append(
             {
@@ -97,9 +108,18 @@ def _series_to_statistics(series: list[float | None]) -> list[dict]:
 async def async_import_power_history(
     hass: HomeAssistant,
     entry: FiftyfiveConfigEntry,
+    include_current_hour: bool = False,
 ) -> None:
     """
     Fetch the portal power history and import it into HA statistics.
+
+    Args:
+        hass: Home Assistant instance.
+        entry: The 50five config entry.
+        include_current_hour: If True, import the incomplete current hour too.
+            Normally False for automatic hourly imports (to avoid fighting the
+            recorder), but can be True for manual backfills to ensure today's
+            data is visible immediately.
 
     Best effort: any failure is logged and swallowed so it can never break the
     integration setup or polling.
@@ -112,6 +132,7 @@ async def async_import_power_history(
         return
 
     registry = er.async_get(hass)
+    imported_count = 0
     for idx, series in history.items():
         entity_id = registry.async_get_entity_id(
             "sensor", DOMAIN, f"{idx}_{_POWER_KEY}"
@@ -120,7 +141,7 @@ async def async_import_power_history(
             LOGGER.debug("No power entity registered yet for charger %s", idx)
             continue
 
-        statistics = _series_to_statistics(series)
+        statistics = _series_to_statistics(series, include_current_hour)
         if not statistics:
             continue
 
@@ -131,7 +152,14 @@ async def async_import_power_history(
         )
         try:
             async_import_statistics(hass, _build_metadata(entity_id), statistics)
+            imported_count += len(statistics)
         except Exception:  # noqa: BLE001 - never break the background task
             LOGGER.debug(
                 "Failed to import power statistics for %s", entity_id, exc_info=True
             )
+
+    if include_current_hour and imported_count > 0:
+        LOGGER.info(
+            "Manual power history import completed: %d statistics imported",
+            imported_count,
+        )

@@ -159,6 +159,10 @@
                     "description": "De laadpaal die gedeblokkeerd moet worden."
                 }
             }
+        },
+        "import_power_history": {
+            "name": "Importeer laad-geschiedenis",
+            "description": "Importeer handmatig de laadgeschiedenis van de afgelopen ~3 dagen vanuit het 50five portaal naar Home Assistant statistieken, inclusief het huidige (onvolledige) uur. Dit vult gaten op in de geschiedenis van de stroomverbruik-sensor."
         }
     }
 }
