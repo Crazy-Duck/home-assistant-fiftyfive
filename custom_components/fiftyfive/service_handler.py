@@ -8,6 +8,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
 from .statistics import async_import_power_history
+from .update_check import async_check_for_update
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -183,3 +184,12 @@ class ChargerServiceHandler:
             await async_import_power_history(
                 self.hass, entry, include_current_hour=True
             )
+
+    async def handle_check_for_update(self, call: ServiceCall) -> None:
+        """Handle the check_for_update service call (force an immediate check)."""
+        LOGGER.info("Manual update check requested")
+
+        # Run the GitHub update check now for all 50five config entries so the
+        # notification appears immediately instead of waiting for the interval.
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            await async_check_for_update(self.hass, entry)

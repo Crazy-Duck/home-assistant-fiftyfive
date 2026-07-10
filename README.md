@@ -229,7 +229,15 @@ The integration also provides a **binary sensor** (`binary_sensor.fiftyfive_upda
 
 Use this sensor to build custom automations (send mobile notifications, flash lights, add to dashboards, etc.).
 
-Both features check at **startup + once every 24 hours**. Update via HACS as usual.
+Both features check at **startup and then every 15 minutes**, so a newly
+published version shows up in the notification center within minutes instead of
+up to a day. The check looks at both GitHub *Releases* and raw *tags*, so a
+freshly pushed version tag is detected even before a formal release is
+published. Update via HACS as usual.
+
+**Want to check right now?** Call the **50five: Check for update** action
+(`fiftyfive.check_for_update`) from **Developer Tools → Actions** to force an
+immediate check; if a newer version exists the notification appears at once.
 
 **Example automations:**
 

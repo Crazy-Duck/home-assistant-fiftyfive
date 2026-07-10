@@ -87,6 +87,9 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, "import_power_history", handler.handle_import_power_history
     )
+    hass.services.async_register(
+        DOMAIN, "check_for_update", handler.handle_check_for_update
+    )
 
     return True
 
