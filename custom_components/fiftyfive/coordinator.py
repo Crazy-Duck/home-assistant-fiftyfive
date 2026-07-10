@@ -5,7 +5,7 @@ from __future__ import annotations
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.helpers import persistent_notification
+from homeassistant.components import persistent_notification
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (

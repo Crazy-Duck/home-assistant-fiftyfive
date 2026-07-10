@@ -19,7 +19,6 @@ import re
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.components.recorder.statistics import async_import_statistics
 from homeassistant.const import UnitOfPower
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -47,15 +46,24 @@ _LABEL_RE = re.compile(
     re.UNICODE,
 )
 
-# The recorder statistics API changed over time.  Import the new
-# ``StatisticMeanType`` enum when available so we can populate ``mean_type``
-# (required from HA 2026.11) while still running on older cores.
-try:  # pragma: no cover - depends on installed HA version
-    from homeassistant.components.recorder.models import StatisticMeanType
+def _arithmetic_mean_type() -> object | None:
+    """
+    Return the recorder ``StatisticMeanType.ARITHMETIC`` value, or ``None``.
 
-    _ARITHMETIC_MEAN = StatisticMeanType.ARITHMETIC
-except Exception:  # noqa: BLE001 - older HA without StatisticMeanType
-    _ARITHMETIC_MEAN = None
+    The recorder statistics API changed over time; ``StatisticMeanType`` is
+    needed to populate ``mean_type`` (required from HA 2026.11) while still
+    running on older cores.  This import is done lazily (inside the function)
+    rather than at module top-level: importing ``homeassistant.components.
+    recorder`` is heavy (pulls in SQLAlchemy) and doing it while Home Assistant
+    imports the integration would block the event loop.
+    """
+    try:  # pragma: no cover - depends on installed HA version
+        from homeassistant.components.recorder.models import StatisticMeanType
+
+        return StatisticMeanType.ARITHMETIC
+    except Exception:  # noqa: BLE001 - older HA without StatisticMeanType
+        return None
+
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -81,8 +89,9 @@ def _build_metadata(entity_id: str) -> dict:
         # No unit conversion needed for imported history.
         "unit_class": None,
     }
-    if _ARITHMETIC_MEAN is not None:
-        metadata["mean_type"] = _ARITHMETIC_MEAN
+    arithmetic_mean = _arithmetic_mean_type()
+    if arithmetic_mean is not None:
+        metadata["mean_type"] = arithmetic_mean
     return metadata
 
 
@@ -204,6 +213,13 @@ async def async_import_power_history(
     Best effort: any failure is logged and swallowed so it can never break the
     integration setup or polling.
     """
+    # Imported lazily (not at module top-level): importing the recorder pulls
+    # in SQLAlchemy and is heavy, which would block the event loop while Home
+    # Assistant imports the integration.
+    from homeassistant.components.recorder.statistics import (
+        async_import_statistics,
+    )
+
     client = entry.runtime_data.client
     try:
         history = await client.async_get_power_history()
