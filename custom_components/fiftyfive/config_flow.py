@@ -236,10 +236,12 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
 
         if self._reauth_entry is not None:
+            # Update the entry data (new session cookies). The update_listener
+            # registered in async_setup_entry will automatically reload the entry,
+            # so no explicit async_reload call is needed here.
             self.hass.config_entries.async_update_entry(
                 self._reauth_entry, data=data
             )
-            await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         self._abort_if_unique_id_configured()
