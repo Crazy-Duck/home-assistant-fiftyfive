@@ -114,8 +114,9 @@ async def async_setup_entry(
     # Reuse the session cookies captured during (2FA) setup so that regular
     # polling does not trigger a new login -- a new login would require a fresh
     # e-mailed 2FA code which cannot be obtained unattended. When the stored
-    # session eventually expires the coordinator raises ConfigEntryAuthFailed,
-    # which triggers the reauth flow so the user can supply a new code.
+    # session eventually expires the coordinator raises UpdateFailed (entities
+    # go unavailable + a notification is shown); it does NOT reconnect or
+    # request a new 2FA code automatically -- the user reconfigures manually.
     seed_cookies(
         session,
         build_base_url(entry.data[CONF_COUNTRY], entry.data[CONF_CUST_TYPE]),

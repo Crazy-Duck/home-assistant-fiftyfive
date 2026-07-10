@@ -198,6 +198,28 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._login_input = dict(entry_data)
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """
+        Handle a user-initiated reconfiguration.
+
+        This is the manual path the user takes when the session has expired.
+        The integration never reconnects automatically and never requests a new
+        2FA code on its own; a fresh 2FA e-mail is only sent when the user goes
+        through this flow and submits their credentials.
+        """
+        entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        if entry is not None:
+            self._reauth_entry = entry
+            # Only seed the defaults on the first render, never overwrite the
+            # values the user is actively editing in the form.
+            if user_input is None:
+                self._login_input = dict(entry.data)
+        return await self.async_step_user(user_input)
+
     async def _async_create_or_update_entry(
         self,
     ) -> config_entries.ConfigFlowResult:

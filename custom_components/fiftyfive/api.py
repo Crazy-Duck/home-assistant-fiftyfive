@@ -190,11 +190,11 @@ class FiftyfiveApiClient:
         # When the session has expired (or was never authenticated) the portal
         # answers the API with an empty ``[]`` instead of the usual
         # ``[[ {charger}, ... ]]`` payload.  Treat that as an authentication
-        # failure so the coordinator can raise ``ConfigEntryAuthFailed`` and
-        # Home Assistant starts the re-authentication flow (the user then
-        # supplies a fresh e-mailed 2FA code).  We deliberately only test the
-        # outer list: a genuinely charger-less (but authenticated) account
-        # returns ``[[]]`` and must not be forced into a reauth loop.
+        # failure so the coordinator can raise ``UpdateFailed`` (entities go
+        # unavailable + a notification is shown) without reconnecting or
+        # requesting a fresh e-mailed 2FA code automatically.  We deliberately
+        # only test the outer list: a genuinely charger-less (but authenticated)
+        # account returns ``[[]]`` and must not be forced into an error loop.
         if not networks:
             msg = "Session expired or invalid credentials"
             raise FiftyfiveApiClientAuthenticationError(msg)
