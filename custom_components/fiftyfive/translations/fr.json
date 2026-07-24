@@ -9,6 +9,12 @@
                     "country": "Région",
                     "customer_type": "Type de client"
                 }
+            },
+            "reauth": {
+                "description": "Met à jour votre mot de passe.",
+                "data": {
+                    "password": "Mot de passe"
+                }
             }
         },
         "error": {

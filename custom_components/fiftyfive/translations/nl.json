@@ -9,6 +9,12 @@
                     "country": "Markt",
                     "customer_type": "Type klant"
                 }
+            },
+            "reauth": {
+                "description": "Update je paswoord.",
+                "data": {
+                    "password": "Paswoord"
+                }
             }
         },
         "error": {

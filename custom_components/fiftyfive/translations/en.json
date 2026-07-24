@@ -9,6 +9,12 @@
                     "country": "Market",
                     "customer_type": "Customer type"
                 }
+            },
+            "reauth": {
+                "description": "Update your password.",
+                "data": {
+                    "password": "Password"
+                }
             }
         },
         "error": {
