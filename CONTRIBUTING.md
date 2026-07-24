@@ -46,6 +46,11 @@ People *love* thorough bug reports. I'm not even kidding.
 
 Use [black](https://github.com/ambv/black) to make sure the code follows the style.
 
+## Keep it simple
+
+Do not overload your pull requests; if you want to contribute multiple features, create a PR per feature.
+This allows us to more efficiently review your contribution and if necessary pick and choose which features we want to add.
+
 ## Test your code modification
 
 This custom component is based on [integration_blueprint template](https://github.com/ludeeus/integration_blueprint).
@@ -55,6 +60,13 @@ if you use Visual Studio Code. With this container you will have a stand alone
 Home Assistant instance running and already configured with the included
 [`configuration.yaml`](./config/configuration.yaml)
 file.
+
+## Understand the code you submit
+
+While I am not inherently opposed to using LLM's to generate code, you __will__ be held ultimately responsible for the code it generates.
+This means you are expected to fully understand whatever code your LLM produced.
+Pull requests that do not comply with the contribution guidelines will simply be closed.
+
 
 ## License
 
