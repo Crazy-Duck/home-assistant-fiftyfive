@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.loader import async_get_loaded_integration
 
 from fiftyfive import CustomerType
@@ -80,6 +80,9 @@ async def async_setup_entry(
     entry: FiftyfiveConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
+    session = async_create_clientsession(hass)
+    entry.async_on_unload(session.close)
+
     coordinator = FiftyfiveDataUpdateCoordinator(
         hass=hass,
         logger=LOGGER,
@@ -95,7 +98,7 @@ async def async_setup_entry(
             password=entry.data[CONF_PASSWORD],
             market=entry.data[CONF_COUNTRY],
             customer_type=entry.data[CONF_CUST_TYPE],
-            session=async_get_clientsession(hass),
+            session=session,
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
