@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -25,6 +26,9 @@ if TYPE_CHECKING:
     from .data import FiftyfiveConfigEntry
 
 
+_DURATION_RE = re.compile(r"(?:(\d+)d)?(\d+):(\d+)")
+
+
 @dataclass(frozen=True, kw_only=True)
 class FiftyfiveSensorEntityDescription(SensorEntityDescription):
     """Class describing 50five sensor entities."""
@@ -36,8 +40,13 @@ def hm_to_m(value: str) -> int:
     """Convert hh:mm duration into minutes."""
     if not value:
         return 0
-    hours, minutes = map(int, value.split(":"))
-    return 60 * hours + minutes
+
+    m = _DURATION_RE.fullmatch(value)
+    if not m:
+        return 0
+
+    days, hours, minutes = m.groups()
+    return int(days or 0) * 24 * 60 + int(hours) * 60 + int(minutes)
 
 
 ENTITY_DESCRIPTIONS = (
