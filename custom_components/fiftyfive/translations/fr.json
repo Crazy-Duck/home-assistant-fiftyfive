@@ -10,18 +10,22 @@
                     "customer_type": "Type de client"
                 }
             },
-            "reauth": {
-                "description": "Met à jour votre mot de passe.",
+            "2fa": {
+                "title": "Authentification à deux facteurs",
+                "description": "Un code de vérification à usage unique a été envoyé par e-mail à votre compte 50five ({username}). Saisissez le code ci-dessous pour terminer la connexion. Le portail conserve la session valide pendant environ 24 heures ; à son expiration, Home Assistant vous demandera de vous ré-authentifier avec un nouveau code.",
                 "data": {
-                    "password": "Mot de passe"
+                    "auth_code": "Code de vérification"
                 }
             }
         },
         "error": {
-            "auth": "Erreur sur l'identifiant ou la région."
+            "auth": "Erreur sur l'identifiant ou la région.",
+            "connection": "Impossible de se connecter au portail 50five. Veuillez réessayer.",
+            "invalid_2fa": "Code de vérification invalide ou expiré."
         },
         "abort": {
-            "already_configured": "Cette combinaison est déjà configurée."
+            "already_configured": "Cette combinaison est déjà configurée.",
+            "reauth_successful": "La ré-authentification a réussi."
         }
     },
     "selector": {
@@ -75,6 +79,9 @@
             },
             "status": {
                 "name": "Etat de la borne"
+            },
+            "total_energy_delivered": {
+                "name": "Énergie totale délivrée"
             }
         }
     },
@@ -152,6 +159,14 @@
                     "description": "Borne à débloquer."
                 }
             }
+        },
+        "import_power_history": {
+            "name": "Importer l'historique de puissance",
+            "description": "Importer manuellement les ~3 derniers jours d'historique de puissance de recharge terminé depuis le portail 50five vers les statistiques Home Assistant. Cela comble les lacunes dans le graphique d'historique du capteur de puissance. L'heure actuelle (incomplète) est ignorée ; Home Assistant l'enregistre lui-même."
+        },
+        "check_for_update": {
+            "name": "Vérifier les mises à jour",
+            "description": "Forcer une vérification immédiate sur GitHub d'une version plus récente de l'intégration. Si une version plus récente est trouvée, une notification apparaît immédiatement dans le centre de notifications de Home Assistant au lieu d'attendre la vérification périodique."
         }
     }
 }

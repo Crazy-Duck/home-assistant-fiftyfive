@@ -10,18 +10,22 @@
                     "customer_type": "Customer type"
                 }
             },
-            "reauth": {
-                "description": "Update your password.",
+            "2fa": {
+                "title": "Two-factor authentication",
+                "description": "A one-time verification code has been e-mailed to your 50five account ({username}). Enter the code below to finish signing in. The portal keeps the session valid for about 24 hours; when it expires Home Assistant will ask you to re-authenticate with a fresh code.",
                 "data": {
-                    "password": "Password"
+                    "auth_code": "Verification code"
                 }
             }
         },
         "error": {
-            "auth": "Invalid credentials/market."
+            "auth": "Invalid credentials/market.",
+            "connection": "Could not connect to the 50five portal. Please try again.",
+            "invalid_2fa": "Invalid or expired verification code."
         },
         "abort": {
-            "already_configured": "This entry is already configured."
+            "already_configured": "This entry is already configured.",
+            "reauth_successful": "Re-authentication was successful."
         }
     },
     "selector": {
@@ -75,6 +79,9 @@
             },
             "status": {
                 "name": "Charger status"
+            },
+            "total_energy_delivered": {
+                "name": "Total energy delivered"
             }
         }
     },
@@ -152,6 +159,14 @@
                     "description": "The charger to unblock."
                 }
             }
+        },
+        "import_power_history": {
+            "name": "Import power history",
+            "description": "Manually import the last ~3 days of completed charging power history from the 50five portal into Home Assistant statistics. This fills gaps in the power sensor's history graph. The current (incomplete) hour is skipped; Home Assistant records that itself."
+        },
+        "check_for_update": {
+            "name": "Check for update",
+            "description": "Force an immediate check of GitHub for a newer version of the integration. If a newer version is found, a notification appears in the Home Assistant notification center right away instead of waiting for the periodic check."
         }
     }
 }

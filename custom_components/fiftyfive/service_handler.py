@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
+from .statistics import async_import_power_history
+from .update_check import async_check_for_update
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -172,3 +174,22 @@ class ChargerServiceHandler:
             await entry.runtime_data.coordinator.start_fast_polling()
 
         await self._do_action_on_device(device_id=device_id, action=action)
+
+    async def handle_import_power_history(self, call: ServiceCall) -> None:  # noqa: ARG002
+        """Handle the import_power_history service call."""
+        LOGGER.info("Manual power history import requested")
+
+        # Import for all 50five config entries. Only completed past hours are
+        # imported; the current (incomplete) hour is skipped to avoid clashing
+        # with the recorder's own statistics compilation.
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            await async_import_power_history(self.hass, entry)
+
+    async def handle_check_for_update(self, call: ServiceCall) -> None:  # noqa: ARG002
+        """Handle the check_for_update service call (force an immediate check)."""
+        LOGGER.info("Manual update check requested")
+
+        # Run the GitHub update check now for all 50five config entries so the
+        # notification appears immediately instead of waiting for the interval.
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            await async_check_for_update(self.hass, entry)
