@@ -97,6 +97,9 @@ async def _fetch_latest_tag(hass: HomeAssistant) -> str | None:
             headers=_GITHUB_HEADERS,
             timeout=_REQUEST_TIMEOUT,
         ) as response:
+            if response.status == 404:  # noqa: PLR2004 - repo has no tags
+                LOGGER.debug("No GitHub tags found (404)")
+                return None
             if response.status != 200:  # noqa: PLR2004
                 LOGGER.warning("GitHub tags check returned HTTP %s", response.status)
                 return None

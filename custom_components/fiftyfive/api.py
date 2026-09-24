@@ -126,6 +126,25 @@ def extract_power_labels(graph: Any) -> list[str]:
     return [str(label) for label in labels]
 
 
+def parse_portal_number(number_str: str) -> float:
+    """
+    Parse a number as rendered by the 50five portal (European formatting).
+
+    The portal uses ``.`` as thousands separator and ``,`` as decimal
+    separator, e.g. ``"6,544"`` MWh means 6.544 MWh and ``"1.234,5"`` means
+    1234.5.  When only dots are present and the last group is not three
+    digits long (``"6.5"``), the dot is treated as a decimal separator.
+    """
+    text = number_str.strip().replace("\u00a0", "").replace(" ", "")
+    if "," in text:
+        text = text.replace(".", "").replace(",", ".")
+    elif text.count(".") > 1 or (
+        "." in text and len(text.rsplit(".", 1)[1]) == 3  # noqa: PLR2004
+    ):
+        text = text.replace(".", "")
+    return float(text)
+
+
 class FiftyfiveApiClientError(Exception):
     """Exception to indicate a general API error."""
 
@@ -349,9 +368,7 @@ class FiftyfiveApiClient:
             number_str = data.get("number", "")
             unit = data.get("unit", "kWh")
 
-            # Parse European-formatted number (remove commas/dots as thousand sep)
-            cleaned = number_str.replace(",", "").replace(".", "")
-            value = float(cleaned)
+            value = parse_portal_number(number_str)
 
             # Normalize to kWh
             if unit == "MWh":

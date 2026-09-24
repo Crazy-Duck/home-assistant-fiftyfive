@@ -17,7 +17,7 @@ CONF_COOKIES = "session_cookies"
 
 # GitHub repository that publishes the releases for this integration.  Used by
 # the update checker to notify the user when a newer version is available.
-UPDATE_REPO = "pimhofstee/50five-HA-2fa"
+UPDATE_REPO = "Crazy-Duck/home-assistant-fiftyfive"
 UPDATE_LATEST_RELEASE_URL = (
     f"https://api.github.com/repos/{UPDATE_REPO}/releases/latest"
 )
