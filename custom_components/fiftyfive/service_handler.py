@@ -175,17 +175,17 @@ class ChargerServiceHandler:
 
         await self._do_action_on_device(device_id=device_id, action=action)
 
-    async def handle_import_power_history(self, call: ServiceCall) -> None:
+    async def handle_import_power_history(self, call: ServiceCall) -> None:  # noqa: ARG002
         """Handle the import_power_history service call."""
         LOGGER.info("Manual power history import requested")
-        
+
         # Import for all 50five config entries. Only completed past hours are
         # imported; the current (incomplete) hour is skipped to avoid clashing
         # with the recorder's own statistics compilation.
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             await async_import_power_history(self.hass, entry)
 
-    async def handle_check_for_update(self, call: ServiceCall) -> None:
+    async def handle_check_for_update(self, call: ServiceCall) -> None:  # noqa: ARG002
         """Handle the check_for_update service call (force an immediate check)."""
         LOGGER.info("Manual update check requested")
 

@@ -358,8 +358,8 @@ class FiftyfiveApiClient:
                 value *= 1000
             elif unit == "GWh":
                 value *= 1_000_000
-
-            return value
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Failed to fetch total energy", exc_info=True)
             return None
+        else:
+            return value

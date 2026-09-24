@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # noqa: ARG001 - required by HA platform signature
     entry: FiftyfiveConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:

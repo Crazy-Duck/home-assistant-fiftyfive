@@ -59,10 +59,11 @@ class FiftyfiveDataUpdateCoordinator(DataUpdateCoordinator):
                 "want to supply a fresh 2FA code."
             )
             self._notify_session_expired()
-            raise UpdateFailed(
+            msg = (
                 "50five session expired - manual reconfiguration required "
                 "(no automatic reconnect / no new 2FA code requested)"
-            ) from exception
+            )
+            raise UpdateFailed(msg) from exception
         except FiftyfiveApiClientError as exception:
             raise UpdateFailed(exception) from exception
         else:
@@ -76,16 +77,18 @@ class FiftyfiveDataUpdateCoordinator(DataUpdateCoordinator):
             # window reuses a still-valid session instead of the stale cookie
             # captured at setup time.
             self._persist_session_cookies()
-            
+
             # Fetch the account-wide total energy delivered by all chargers.
             # This is a best-effort query; failure must never break polling.
-            total_energy = await self.config_entry.runtime_data.client.async_get_total_energy()
+            total_energy = (
+                await self.config_entry.runtime_data.client.async_get_total_energy()
+            )
             if total_energy is not None:
                 # Inject the total into every charger's data dict so the sensor
                 # can access it.  All chargers show the same account-wide value.
                 for network in networks:
                     network["TOTAL_ENERGY_KWH"] = total_energy
-            
+
             charging = any(int(n["STATUS"] or "0") > 0 for n in networks)
             interval = CHARGING_UPDATE_INTERVAL if charging else DEFAULT_UPDATE_INTERVAL
 

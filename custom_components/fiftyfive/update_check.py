@@ -71,9 +71,7 @@ async def _fetch_latest_release(hass: HomeAssistant) -> tuple[str | None, str | 
                 LOGGER.debug("No published GitHub release found (404)")
                 return None, None
             if response.status != 200:  # noqa: PLR2004
-                LOGGER.warning(
-                    "GitHub release check returned HTTP %s", response.status
-                )
+                LOGGER.warning("GitHub release check returned HTTP %s", response.status)
                 return None, None
             payload = await response.json()
     except Exception as err:  # noqa: BLE001 - best effort background task
@@ -152,9 +150,7 @@ async def async_check_for_update(
 
     # Pick whichever source reports the highest version.
     latest = release_version
-    if tag_version is not None and (
-        latest is None or _is_newer(tag_version, latest)
-    ):
+    if tag_version is not None and (latest is None or _is_newer(tag_version, latest)):
         latest = tag_version
         # A tag ahead of the latest release has no release page yet; point the
         # user at the releases/tags overview instead.
@@ -186,6 +182,4 @@ async def async_check_for_update(
             installed,
         )
     else:
-        LOGGER.info(
-            "50five up to date (installed %s, latest %s)", installed, latest
-        )
+        LOGGER.info("50five up to date (installed %s, latest %s)", installed, latest)

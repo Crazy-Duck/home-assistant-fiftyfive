@@ -78,9 +78,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             self._session, self._base_url
                         )
                     except Exception:  # noqa: BLE001
-                        LOGGER.exception(
-                            "Error while requesting the 2FA code e-mail"
-                        )
+                        LOGGER.exception("Error while requesting the 2FA code e-mail")
                         _errors["base"] = "connection"
                     else:
                         return await self.async_step_2fa()
@@ -209,9 +207,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         2FA code on its own; a fresh 2FA e-mail is only sent when the user goes
         through this flow and submits their credentials.
         """
-        entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         if entry is not None:
             self._reauth_entry = entry
             # Only seed the defaults on the first render, never overwrite the
@@ -239,9 +235,7 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # Update the entry data (new session cookies). The update_listener
             # registered in async_setup_entry will automatically reload the entry,
             # so no explicit async_reload call is needed here.
-            self.hass.config_entries.async_update_entry(
-                self._reauth_entry, data=data
-            )
+            self.hass.config_entries.async_update_entry(self._reauth_entry, data=data)
             return self.async_abort(reason="reauth_successful")
 
         self._abort_if_unique_id_configured()

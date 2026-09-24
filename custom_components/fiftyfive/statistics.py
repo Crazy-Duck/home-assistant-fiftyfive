@@ -30,13 +30,35 @@ from .const import DOMAIN, LOGGER
 # ``"07-jul. 06:00"`` using the account's locale, so we accept all of them.
 _MONTHS: dict[str, int] = {
     # Dutch
-    "jan": 1, "feb": 2, "mrt": 3, "apr": 4, "mei": 5, "jun": 6,
-    "jul": 7, "aug": 8, "sep": 9, "okt": 10, "nov": 11, "dec": 12,
+    "jan": 1,
+    "feb": 2,
+    "mrt": 3,
+    "apr": 4,
+    "mei": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "okt": 10,
+    "nov": 11,
+    "dec": 12,
     # English (only the ones that differ from the above)
-    "mar": 3, "may": 5, "oct": 10,
+    "mar": 3,
+    "may": 5,
+    "oct": 10,
     # French (only the ones that differ from the above)
-    "janv": 1, "fevr": 2, "févr": 2, "mars": 3, "avr": 4, "juin": 6,
-    "juil": 7, "aout": 8, "août": 8, "sept": 9, "dec.": 12, "déc": 12,
+    "janv": 1,
+    "fevr": 2,
+    "févr": 2,
+    "mars": 3,
+    "avr": 4,
+    "juin": 6,
+    "juil": 7,
+    "aout": 8,
+    "août": 8,
+    "sept": 9,
+    "dec.": 12,
+    "déc": 12,
 }
 
 # Matches labels such as "07-jul. 06:00" -> day, month-abbr, hour, minute.
@@ -45,6 +67,7 @@ _LABEL_RE = re.compile(
     r"(?P<hour>\d{1,2}):(?P<minute>\d{2})",
     re.UNICODE,
 )
+
 
 def _arithmetic_mean_type() -> object | None:
     """
@@ -58,11 +81,13 @@ def _arithmetic_mean_type() -> object | None:
     imports the integration would block the event loop.
     """
     try:  # pragma: no cover - depends on installed HA version
-        from homeassistant.components.recorder.models import StatisticMeanType
-
-        return StatisticMeanType.ARITHMETIC
+        from homeassistant.components.recorder.models import (  # noqa: PLC0415
+            StatisticMeanType,
+        )
     except Exception:  # noqa: BLE001 - older HA without StatisticMeanType
         return None
+    else:
+        return StatisticMeanType.ARITHMETIC
 
 
 if TYPE_CHECKING:
@@ -143,10 +168,11 @@ def _parse_label(label: str, now: datetime) -> datetime | None:
     if month > now.month + 1:
         year -= 1
     try:
-        naive = datetime(year, month, day, hour, minute)
+        return datetime(
+            year, month, day, hour, minute, tzinfo=dt_util.DEFAULT_TIME_ZONE
+        )
     except ValueError:
         return None
-    return naive.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
 
 def _series_to_statistics(
@@ -175,6 +201,7 @@ def _series_to_statistics(
     Args:
         series: Hourly power values (kW), oldest to newest.
         labels: Portal labels aligned with ``series`` (oldest to newest).
+
     """
     if not series:
         return []
@@ -239,11 +266,12 @@ async def async_import_power_history(
 
     Best effort: any failure is logged and swallowed so it can never break the
     integration setup or polling.
+
     """
     # Imported lazily (not at module top-level): importing the recorder pulls
     # in SQLAlchemy and is heavy, which would block the event loop while Home
     # Assistant imports the integration.
-    from homeassistant.components.recorder.statistics import (
+    from homeassistant.components.recorder.statistics import (  # noqa: PLC0415
         async_import_statistics,
     )
 

@@ -61,9 +61,7 @@ ENTITY_DESCRIPTIONS = (
         # value, otherwise fall back to ``LIVE_POWER_KW`` which is derived from
         # the portal's own charging-power graph (the ``current`` service).
         value_fn=lambda network: (
-            network.get("MOM_POWER_KW")
-            or network.get("LIVE_POWER_KW")
-            or 0
+            network.get("MOM_POWER_KW") or network.get("LIVE_POWER_KW") or 0
         ),
     ),
     FiftyfiveSensorEntityDescription(
