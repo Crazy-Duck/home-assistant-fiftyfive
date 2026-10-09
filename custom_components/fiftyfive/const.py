@@ -12,3 +12,4 @@ CHARGING_UPDATE_INTERVAL = timedelta(seconds=5)
 FAST_POLL_TIME = 30
 
 CONF_CUST_TYPE = "customer_type"
+CONF_SESSION = "session"

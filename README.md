@@ -39,6 +39,24 @@ Alternatively:
 The integration discovers all chargers linked to your account and creates
 devices and sensors for each discovered charger.
 
+### Email verification and expired sessions
+
+Some 50five markets require a verification code sent by email. The integration
+requests that code only after you submit the Home Assistant sign-in form. It
+then stores the authenticated provider session and keeps any rotated session
+cookies current, so Home Assistant restarts do not unnecessarily require
+another code.
+
+When the provider can renew a session with the saved credentials, renewal is
+handled without user interaction. If 50five requires email verification again,
+Home Assistant marks the existing entry as needing reauthentication and shows
+one native repair path under **Settings → Devices & Services**. Completing that
+flow updates the same config entry, so devices, entities, entity IDs, and
+history are preserved.
+
+50five controls how long a verified session remains valid. The integration
+cannot and does not bypass provider-mandated MFA.
+
 ### Actions
 
 #### Available service actions

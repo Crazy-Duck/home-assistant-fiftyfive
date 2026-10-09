@@ -10,18 +10,29 @@
                     "customer_type": "Type klant"
                 }
             },
-            "reauth": {
-                "description": "Update je paswoord.",
+            "reauth_confirm": {
+                "description": "De opgeslagen sessie voor {username} is verlopen. Ga verder om opnieuw in te loggen. Laat het wachtwoord leeg om het opgeslagen wachtwoord te blijven gebruiken.",
                 "data": {
-                    "password": "Paswoord"
+                    "password": "Wachtwoord"
+                }
+            },
+            "mfa": {
+                "title": "Verificatie per e-mail",
+                "description": "50five heeft een verificatiecode naar {username} gestuurd. Vul die code in om het inloggen af te ronden. Er wordt alleen een nieuwe e-mail aangevraagd wanneer deze stap wordt gestart.",
+                "data": {
+                    "code": "Verificatiecode"
                 }
             }
         },
         "error": {
-            "auth": "Ongeldige inloggegevens/markt."
+            "auth": "Ongeldige inloggegevens of markt.",
+            "connection": "Kan geen verbinding maken met het 50five-portaal. Probeer het opnieuw.",
+            "invalid_mfa": "De verificatiecode is ongeldig of verlopen."
         },
         "abort": {
-            "already_configured": "Deze combinatie is al configureerd."
+            "already_configured": "Deze combinatie is al geconfigureerd.",
+            "mfa_session_expired": "De inlogsessie is verlopen. Begin opnieuw.",
+            "reauth_successful": "Opnieuw authenticeren is gelukt."
         }
     },
     "selector": {

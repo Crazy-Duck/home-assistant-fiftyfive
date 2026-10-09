@@ -10,18 +10,29 @@
                     "customer_type": "Customer type"
                 }
             },
-            "reauth": {
-                "description": "Update your password.",
+            "reauth_confirm": {
+                "description": "The saved session for {username} has expired. Continue to sign in again. Leave the password empty to keep using the saved password.",
                 "data": {
                     "password": "Password"
+                }
+            },
+            "mfa": {
+                "title": "Email verification",
+                "description": "50five sent a verification code to {username}. Enter that code to finish signing in. A new email is only requested when this step is started.",
+                "data": {
+                    "code": "Verification code"
                 }
             }
         },
         "error": {
-            "auth": "Invalid credentials/market."
+            "auth": "Invalid credentials or market.",
+            "connection": "Could not connect to the 50five portal. Please try again.",
+            "invalid_mfa": "The verification code is invalid or has expired."
         },
         "abort": {
-            "already_configured": "This entry is already configured."
+            "already_configured": "This entry is already configured.",
+            "mfa_session_expired": "The sign-in session expired. Please start again.",
+            "reauth_successful": "Reauthentication was successful."
         }
     },
     "selector": {

@@ -12,7 +12,12 @@ from .api import (
     FiftyfiveApiClientAuthenticationError,
     FiftyfiveApiClientError,
 )
-from .const import CHARGING_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, FAST_POLL_TIME
+from .const import (
+    CHARGING_UPDATE_INTERVAL,
+    CONF_SESSION,
+    DEFAULT_UPDATE_INTERVAL,
+    FAST_POLL_TIME,
+)
 
 if TYPE_CHECKING:
     from .data import FiftyfiveConfigEntry
@@ -37,6 +42,16 @@ class FiftyfiveDataUpdateCoordinator(DataUpdateCoordinator):
         except FiftyfiveApiClientError as exception:
             raise UpdateFailed(exception) from exception
         else:
+            session_state = self.config_entry.runtime_data.client.session_state()
+            if session_state != self.config_entry.data.get(CONF_SESSION, {}):
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        **self.config_entry.data,
+                        CONF_SESSION: session_state,
+                    },
+                )
+
             charging = any(int(n["STATUS"] or "0") > 0 for n in networks)
             interval = CHARGING_UPDATE_INTERVAL if charging else DEFAULT_UPDATE_INTERVAL
 

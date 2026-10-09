@@ -10,18 +10,29 @@
                     "customer_type": "Type de client"
                 }
             },
-            "reauth": {
-                "description": "Met à jour votre mot de passe.",
+            "reauth_confirm": {
+                "description": "La session enregistrée pour {username} a expiré. Continuez pour vous reconnecter. Laissez le mot de passe vide pour conserver le mot de passe enregistré.",
                 "data": {
                     "password": "Mot de passe"
+                }
+            },
+            "mfa": {
+                "title": "Vérification par e-mail",
+                "description": "50five a envoyé un code de vérification à {username}. Saisissez ce code pour terminer la connexion. Un nouvel e-mail est demandé uniquement au démarrage de cette étape.",
+                "data": {
+                    "code": "Code de vérification"
                 }
             }
         },
         "error": {
-            "auth": "Erreur sur l'identifiant ou la région."
+            "auth": "Identifiants ou région invalides.",
+            "connection": "Impossible de se connecter au portail 50five. Réessayez.",
+            "invalid_mfa": "Le code de vérification est invalide ou a expiré."
         },
         "abort": {
-            "already_configured": "Cette combinaison est déjà configurée."
+            "already_configured": "Cette combinaison est déjà configurée.",
+            "mfa_session_expired": "La session de connexion a expiré. Recommencez.",
+            "reauth_successful": "La réauthentification a réussi."
         }
     },
     "selector": {
