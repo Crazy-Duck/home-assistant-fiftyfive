@@ -31,13 +31,17 @@ class FiftyfiveDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> Any:
         """Update data via library."""
         try:
-            networks = await self.config_entry.runtime_data.client.async_get_data()
+            chargers = await self.config_entry.runtime_data.client.async_get_data()
         except FiftyfiveApiClientAuthenticationError as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except FiftyfiveApiClientError as exception:
             raise UpdateFailed(exception) from exception
         else:
-            charging = any(int(n["STATUS"] or "0") > 0 for n in networks)
+            charging = any(
+                channel.global_status == "Charging"
+                for charger in chargers
+                for channel in charger.channels
+            )
             interval = CHARGING_UPDATE_INTERVAL if charging else DEFAULT_UPDATE_INTERVAL
 
             # During fast polling we disregard charger status
@@ -48,4 +52,4 @@ class FiftyfiveDataUpdateCoordinator(DataUpdateCoordinator):
                     self.update_interval = CHARGING_UPDATE_INTERVAL
             elif self.update_interval != interval:
                 self.update_interval = interval
-            return networks
+            return chargers

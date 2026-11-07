@@ -11,16 +11,22 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.loader import async_get_loaded_integration
 
-from fiftyfive import CustomerType
-
 from .api import FiftyfiveApiClient
-from .const import CONF_CUST_TYPE, DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import (
+    CONF_CUST_TYPE,
+    CURRENT_VERSION,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import FiftyfiveDataUpdateCoordinator
 from .data import FiftyfiveData
-from .service_handler import ChargerServiceHandler
+from .entity import FiftyfiveChargerEntity
+from .service_handler import ChannelServiceHandler, ChargerServiceHandler
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -39,15 +45,18 @@ PLATFORMS: list[Platform] = [
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old config entries."""
-    if config_entry.version == 1:
+    if config_entry.version < CURRENT_VERSION:
         LOGGER.debug(
             "Migrating config from version %s",
             config_entry.version,
         )
         new_data = {**config_entry.data}
-        new_data[CONF_CUST_TYPE] = CustomerType.FORMER_SHELL
+        new_data.pop(CONF_CUST_TYPE, None)
+        new_data.pop(CONF_COUNTRY, None)
 
-        hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, version=CURRENT_VERSION
+        )
         LOGGER.debug(
             "Migrating to config version %s successful",
             config_entry.version,
@@ -57,19 +66,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the integration (global)."""
-    handler = ChargerServiceHandler(hass=hass)
+    h_charger = ChargerServiceHandler(hass=hass)
+    h_channel = ChannelServiceHandler(hass=hass)
 
-    hass.services.async_register(DOMAIN, "start_charge_session", handler.handle_start)
-    hass.services.async_register(DOMAIN, "stop_charge_session", handler.handle_stop)
+    hass.services.async_register(DOMAIN, "start_charge_session", h_channel.handle_start)
+    hass.services.async_register(DOMAIN, "stop_charge_session", h_channel.handle_stop)
+    hass.services.async_register(DOMAIN, "unlock_connector", h_channel.handle_unlock)
     hass.services.async_register(
-        DOMAIN, "soft_reset_charger", handler.handle_soft_reset
+        DOMAIN, "soft_reset_charger", h_charger.handle_soft_reset
     )
     hass.services.async_register(
-        DOMAIN, "hard_reset_charger", handler.handle_hard_reset
+        DOMAIN, "hard_reset_charger", h_charger.handle_hard_reset
     )
-    hass.services.async_register(DOMAIN, "unlock_connector", handler.handle_unlock)
-    hass.services.async_register(DOMAIN, "block_charger", handler.handle_block)
-    hass.services.async_register(DOMAIN, "unblock_charger", handler.handle_unblock)
 
     return True
 
@@ -91,17 +99,24 @@ async def async_setup_entry(
 
     entry.runtime_data = FiftyfiveData(
         client=FiftyfiveApiClient(
+            client=get_async_client(hass),
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
-            market=entry.data[CONF_COUNTRY],
-            customer_type=entry.data[CONF_CUST_TYPE],
-            session=async_get_clientsession(hass),
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
     )
 
     await coordinator.async_config_entry_first_refresh()
+
+    # Register the charge station devices here so they're registered before
+    # their child entries
+    device_registry = dr.async_get(hass)
+    for charger in coordinator.data:
+        device_registry.async_get_or_create_from_info(
+            config_entry_id=entry.entry_id,
+            device_info=FiftyfiveChargerEntity.device_info_from_charger(charger),
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

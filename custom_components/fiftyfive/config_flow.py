@@ -6,20 +6,20 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 from slugify import slugify
 
-from fiftyfive import Api, CustomerType, Market, NetworkOverview
+from fiftyfive import Api
 
-from .const import CONF_CUST_TYPE, DOMAIN, LOGGER
+from .const import CURRENT_VERSION, DOMAIN, LOGGER
 
 
 class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for FiftyFive."""
 
-    VERSION = 2
+    VERSION = CURRENT_VERSION
 
     async def async_step_user(
         self,
@@ -31,8 +31,6 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not await self._test_credentials(
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
-                market=user_input[CONF_COUNTRY],
-                customer_type=user_input[CONF_CUST_TYPE],
             ):
                 LOGGER.warning("Invalid credentials/market.")
                 _errors["base"] = "auth"
@@ -63,25 +61,6 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             type=selector.TextSelectorType.PASSWORD,
                         ),
                     ),
-                    vol.Optional(
-                        CONF_COUNTRY,
-                        default=(user_input or {}).get(CONF_COUNTRY, Market.NONE),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[m.value for m in Market], translation_key="country"
-                        )
-                    ),
-                    vol.Required(
-                        CONF_CUST_TYPE,
-                        default=(user_input or {}).get(
-                            CONF_CUST_TYPE, CustomerType.FORMER_SHELL
-                        ),
-                    ): selector.SelectSelector(
-                        selector.SelectSelectorConfig(
-                            options=[c.value for c in CustomerType],
-                            translation_key="customer_type",
-                        )
-                    ),
                 },
             ),
             errors=_errors,
@@ -95,8 +74,6 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
         self.username = entry_data[CONF_USERNAME]
-        self.country = entry_data[CONF_COUNTRY]
-        self.customer_type = entry_data[CONF_CUST_TYPE]
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -107,10 +84,8 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not await self._test_credentials(
             username=self.username,
             password=user_input[CONF_PASSWORD],
-            market=self.country,
-            customer_type=self.customer_type,
         ):
-            LOGGER.warning("Invalid credentials/market.")
+            LOGGER.warning("Invalid credentials.")
             _errors["base"] = "auth"
         else:
             await self.async_set_unique_id(unique_id=slugify(user_input[CONF_USERNAME]))
@@ -137,15 +112,11 @@ class FiftyfiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _test_credentials(
-        self, username: str, password: str, market: Market, customer_type: CustomerType
-    ) -> Any:
+    async def _test_credentials(self, username: str, password: str) -> bool:
         """Validate credentials."""
         client = Api(
-            session=async_create_clientsession(self.hass),
+            client=get_async_client(self.hass),
             email=username,
             password=password,
-            market=market,
-            customer_type=customer_type,
         )
-        return await client.make_requests([NetworkOverview()])
+        return await client.login()

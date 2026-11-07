@@ -32,12 +32,9 @@ Alternatively:
 1. Enter your 50five account credentials:
     - **Username**: Your 50five username (your e-mail address by default)
     - **Password**: Your account password
-    - **Market**: The market in which your account was created
-    - **Customer type**: Whether you're a native 50five customer or a former
-                         Shell one
 
 The integration discovers all chargers linked to your account and creates
-devices and sensors for each discovered charger.
+devices and sensors for each discovered charger and its channels.
 
 ### Actions
 
@@ -49,8 +46,6 @@ launched via the developer tools, helpers, automations, ... They are:
 * Start a charge session on a charger with a given card 
 * Stop an active session on a charger
 * Unlock the connector from a charger
-* Block a charger
-* Unblock a charger
 * Soft reset a charger
 * Hard reset a charger
 
@@ -80,14 +75,23 @@ card/charger/channel combos you prefer. The process is pretty simple:
 The switch will now show up in the `Overview` dashboard. Additionally you can
 assign it an area in the house in its settings.
 
-## Word of caution
+## 1.0.0 Upgrade
 
-50five's API only updates transaction data every 15m, so take this into account
-when using this integration. Charger status takes about 10-15s to change after
-starting/stopping a session.
+As 50five has decided to start enforcing email 2FA on their Web API, it is no
+longer usable for this integration, given that there's no way to automate 
+obtaining the OTP sent by e-mail. Thankfully the 50five mobile app uses a
+hidden GraphQL API which still allows simple username + password
+authentication. Unfortunately, this GraphQL API does not (yet?) offer all
+functionality that was available on the Web API, as such I was forced to delete
+the following sensors and actions:
 
-### Channel support
+* Block a charger
+* Unblock a charger
+* Power draw
+* Delivered energy during the active transaction
+* Current transaction duration
+* Card used for the current transaction
 
-I do not have a charger with multiple channels, nor do I have any idea how the
-api behaves in case there are multiple channels. If you have multiple channels
-on your charger, please open an issue so we can figure out if anything breaks.
+Depending how the API evolves, these might come back (there is already a
+promising lmsActiveTransaction field, which unfortunately only returns an
+empty transaction) at which point I'll re-add them.

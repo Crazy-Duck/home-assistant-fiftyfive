@@ -2,28 +2,17 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
+
+from sgqlc.operation import Operation
 
 from fiftyfive import (
     Api,
-    Block,
-    CardSearch,
-    Channel,
-    ClientSearch,
-    CustomerType,
-    HardReset,
-    Market,
-    NetworkOverview,
-    Overview,
-    SoftReset,
-    Start,
-    Stop,
-    Unblock,
-    UnlockConnector,
+    schema,
 )
 
 if TYPE_CHECKING:
-    from aiohttp import ClientSession
+    from httpx import AsyncClient
 
 
 class FiftyfiveApiClientError(Exception):
@@ -49,96 +38,121 @@ class FiftyfiveApiInvalidCardError(
 
 
 class FiftyfiveApiClient:
-    """Sample API Client."""
+    """Fiftyfive API Client."""
 
     def __init__(
         self,
         username: str,
         password: str,
-        market: Market,
-        customer_type: CustomerType,
-        session: ClientSession,
+        client: AsyncClient,
     ) -> None:
-        """Sample API Client."""
+        """Initialize API Client."""
         self._api = Api(
-            session=session,
+            client=client,
             email=username,
             password=password,
-            market=market,
-            customer_type=customer_type,
         )
 
-    async def async_get_data(self) -> Any:
+    async def async_get_data(self) -> list[schema.ChargeStation]:
         """Get data from the API."""
-        networks = await self._api.make_requests([NetworkOverview()])
-        if not networks:
-            msg = "Invalid credentials"
-            raise FiftyfiveApiClientAuthenticationError(msg)
+        op = Operation(schema.Query)
+        stations = op.get_charge_stations()
+        stations.items.id()
+        stations.items.name()
+        stations.items.reference()
+        stations.items.comm_id()
+        stations.items.comm_key()
+        stations.items.comm_medium()
+        stations.items.comm_mode()
+        stations.items.comm_status()
+        stations.items.comm_version()
+        stations.items.cost_center_number()
+        stations.items.state()
+        stations.items.physical_number()
+        stations.items.last_communication_date()
+        stations.items.sim_number()
+        stations.items.software_version()
+        stations.items.manufacturer_type()
 
-        details = await self._api.make_requests(
-            [Overview(network["IDX"]) for network in networks[0]]
-        )
+        stations.items.channels()
+        stations.items.home_charging_compensation()
 
-        return [c | d[0] for c, d in zip(networks[0], details, strict=True)]
+        data = await self._api.make_request(op)
+        if data.get("errors"):
+            raise FiftyfiveApiClientError
+        return (op + data).get_charge_stations.items
 
-    async def async_start(self, charger: str, card_id: str) -> Any:
+    async def async_start(self, charger: str, channel: str, card_id: str) -> bool:
         """Start charge session."""
-        clients = await self._api.make_requests(
-            [ClientSearch(recharge_spot_id=charger, name="")]
+        op = Operation(schema.Query)
+        cards = op.get_cards()
+        cards.items.internal_id()
+        cards.items.external_id()
+
+        data = await self._api.make_request(op)
+        if data.get("errors"):
+            raise FiftyfiveApiInvalidCardError
+
+        card_list = (op + data).get_cards
+        card = next((card for card in card_list if card.external_id == card_id), None)
+        if card is None:
+            raise FiftyfiveApiInvalidCardError
+
+        op = Operation(schema.Mutation)
+        op.start_transaction(
+            charge_station_id=charger,
+            channel_id=channel,
+            card=card.internal_id,
         )
+        data = await self._api.make_request(op)
 
-        card_lists = await self._api.make_requests(
-            [
-                CardSearch(recharge_spot_id=charger, customer_id=client["id"])
-                for client in clients[0]
-            ]
-        )
+        if data.get("errors"):
+            raise FiftyfiveApiInvalidCardError
+        return (op + data).start_transaction
 
-        for i, card_list in enumerate(card_lists):
-            if any(card["text"] == card_id for card in card_list):
-                return await self._api.make_requests(
-                    [
-                        Start(
-                            channel=Channel(recharge_spot_id=charger, channel_id="1"),
-                            customer_id=clients[0][i]["id"],
-                            card_id=card_id,
-                        )
-                    ]
-                )
-        raise FiftyfiveApiInvalidCardError
-
-    async def async_stop(self, charger: str) -> Any:
+    async def async_stop(self, charger: str, channel: str) -> bool:
         """Stop a charge session."""
-        return await self._api.make_requests(
-            [Stop(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        op = Operation(schema.Mutation)
+        op.stop_transaction(
+            charge_station_id=charger,
+            channel_id=channel,
         )
+        data = await self._api.make_request(op)
 
-    async def async_soft_reset(self, charger: str) -> Any:
+        if data.get("errors"):
+            raise FiftyfiveApiClientError
+        return (op + data).stop_transaction
+
+    async def async_soft_reset(self, charger: str) -> bool:
         """Soft reset a charger."""
-        return await self._api.make_requests(
-            [SoftReset(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        op = Operation(schema.Mutation)
+        op.soft_reset(
+            charge_station_id=charger,
         )
+        data = await self._api.make_request(op)
 
-    async def async_hard_reset(self, charger: str) -> Any:
+        if data.get("errors"):
+            raise FiftyfiveApiClientError
+        return (op + data).soft_reset
+
+    async def async_hard_reset(self, charger: str) -> bool:
         """Hard reset a charger."""
-        return await self._api.make_requests(
-            [HardReset(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
+        op = Operation(schema.Mutation)
+        op.hard_reset(
+            charge_station_id=charger,
         )
+        data = await self._api.make_request(op)
 
-    async def async_unlock_connector(self, charger: str) -> Any:
+        if data.get("errors"):
+            raise FiftyfiveApiClientError
+        return (op + data).hard_reset
+
+    async def async_unlock_connector(self, charger: str, channel: str) -> bool:
         """Unlock the connector from a charger."""
-        return await self._api.make_requests(
-            [UnlockConnector(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
-        )
+        op = Operation(schema.Mutation)
+        op.unlock_connector(charge_station_id=charger, channel_id=channel)
+        data = await self._api.make_request(op)
 
-    async def async_block(self, charger: str) -> Any:
-        """Block a charger."""
-        return await self._api.make_requests(
-            [Block(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
-        )
-
-    async def async_unblock(self, charger: str) -> Any:
-        """Unblock a charger."""
-        return await self._api.make_requests(
-            [Unblock(channel=Channel(recharge_spot_id=charger, channel_id="1"))]
-        )
+        if data.get("errors"):
+            raise FiftyfiveApiClientError
+        return (op + data).unlock_connector

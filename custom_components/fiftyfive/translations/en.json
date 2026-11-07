@@ -5,9 +5,7 @@
                 "description": "Configure your 50five account. [Learn more.]({docs_url})",
                 "data": {
                     "username": "Username",
-                    "password": "Password",
-                    "country": "Market",
-                    "customer_type": "Customer type"
+                    "password": "Password"
                 }
             },
             "reauth": {
@@ -18,28 +16,10 @@
             }
         },
         "error": {
-            "auth": "Invalid credentials/market."
+            "auth": "Invalid credentials."
         },
         "abort": {
             "already_configured": "This entry is already configured."
-        }
-    },
-    "selector": {
-        "country": {
-            "options": {
-                "at": "Austria",
-                "belux": "Belgium/Luxemburg",
-                "de": "Germany",
-                "fr": "France",
-                "nl": "Netherlands",
-                "uk": "United Kingdom"
-            }
-        },
-        "customer_type": {
-            "options": {
-                "fiftyfive": "50five",
-                "shell": "Former Shell"
-            }
         }
     },
     "entity": {
@@ -53,28 +33,19 @@
             "unlock": {
                 "name": "Unlock connector"
             },
-            "block": {
-                "name": "Block"
-            },
-            "unblock": {
-                "name": "Unblock"
+            "stop": {
+                "name": "Stop charging"
             }
         },
         "sensor": {
-            "power_draw": {
-                "name": "Power draw"
-            },
-            "transaction_energy_delivered": {
-                "name": "Energy delivered during transaction"
-            },
-            "transaction_duration": {
-                "name": "Transaction duration"
-            },
-            "transaction_card": {
-                "name": "Card in use"
-            },
             "status": {
+                "name": "Channel status"
+            },
+            "charger_status": {
                 "name": "Charger status"
+            },
+            "hcc_tariff": {
+                "name": "Compensation tariff"
             }
         }
     },
@@ -130,26 +101,6 @@
                 "device": {
                     "name": "Charger",
                     "description": "The charger from which to unlock the connector."
-                }
-            }
-        },
-        "block_charger": {
-            "name": "Block a charger",
-            "description": "Prevent a charger from being used.",
-            "fields": {
-                "device": {
-                    "name": "Charger",
-                    "description": "The charger to block."
-                }
-            }
-        },
-        "unblock_charger": {
-            "name": "Unblock a charger",
-            "description": "Allow a blocked charger to be used again.",
-            "fields": {
-                "device": {
-                    "name": "Charger",
-                    "description": "The charger to unblock."
                 }
             }
         }

@@ -10,16 +10,18 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
+from homeassistant.const import CURRENCY_EURO
+from homeassistant.helpers import device_registry as dr
 
-from .entity import FiftyfiveEntity
+from .const import DOMAIN
+from .entity import FiftyfiveChannelEntity, FiftyfiveChargerEntity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.device_registry import DeviceRegistry
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import FiftyfiveDataUpdateCoordinator
@@ -36,91 +38,111 @@ class FiftyfiveSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable
 
 
-def hm_to_m(value: str) -> int:
-    """Convert hh:mm duration into minutes."""
-    if not value:
-        return 0
-
-    m = _DURATION_RE.fullmatch(value)
-    if not m:
-        return 0
-
-    days, hours, minutes = m.groups()
-    return int(days or 0) * 24 * 60 + int(hours) * 60 + int(minutes)
-
-
-ENTITY_DESCRIPTIONS = (
+CHARGER_ENTITY_DESCRIPTIONS = (
     FiftyfiveSensorEntityDescription(
-        key="power_draw",
-        translation_key="power_draw",
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda network: network["MOM_POWER_KW"] or 0,
+        key="charger_status",
+        translation_key="charger_status",
+        value_fn=lambda charger: charger.state,
     ),
     FiftyfiveSensorEntityDescription(
-        key="transaction_energy_delivered",
-        translation_key="transaction_energy_delivered",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        value_fn=lambda network: network["TRANS_ENERGY_DELIVERED_KWH"] or 0,
+        key="hcc_tariff",
+        translation_key="hcc_tariff",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement=CURRENCY_EURO,
+        value_fn=lambda charger: charger.home_charging_compensation.hcc_tariff,
     ),
-    FiftyfiveSensorEntityDescription(
-        key="transaction_duration",
-        translation_key="transaction_duration",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda network: hm_to_m(network["TRANSACTION_TIME_H_M"]),
-    ),
-    FiftyfiveSensorEntityDescription(
-        key="transaction_card",
-        translation_key="transaction_card",
-        value_fn=lambda network: network["CARDID"],
-    ),
+)
+CHANNEL_ENTITY_DESCRIPTIONS = (
     FiftyfiveSensorEntityDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda network: network["NOTIFICATION"],
+        value_fn=lambda channel: channel.global_status,
     ),
 )
 
 
+def _get_device_id(
+    device_registry: DeviceRegistry, entry: FiftyfiveConfigEntry, idx: str
+) -> str | None:
+    """Get a device ID from the device registry."""
+    device = device_registry.async_get_device_by_identifier(
+        identifier=(DOMAIN, idx), config_entry_id=entry.entry_id
+    )
+    return device.id if device else None
+
+
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,
     entry: FiftyfiveConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
+    device_registry = dr.async_get(hass)
+
     entities: list = [
         FiftyfiveChargerSensor(
             coordinator=entry.runtime_data.coordinator,
             entity_description=entity_description,
-            idx=network["IDX"],
+            charger_idx=charger.id,
         )
-        for entity_description in ENTITY_DESCRIPTIONS
-        for network in entry.runtime_data.coordinator.data
+        for entity_description in CHARGER_ENTITY_DESCRIPTIONS
+        for charger in entry.runtime_data.coordinator.data
     ]
+    entities.extend(
+        [
+            FiftyfiveChannelSensor(
+                coordinator=entry.runtime_data.coordinator,
+                entity_description=entity_description,
+                charger_idx=charger.id,
+                channel_idx=channel.id,
+                parent_device_id=_get_device_id(device_registry, entry, charger.id),
+            )
+            for entity_description in CHANNEL_ENTITY_DESCRIPTIONS
+            for charger in entry.runtime_data.coordinator.data
+            for channel in charger.channels
+        ]
+    )
 
     async_add_entities(entities)
 
 
-class FiftyfiveChargerSensor(FiftyfiveEntity, SensorEntity):
+class FiftyfiveChargerSensor(FiftyfiveChargerEntity, SensorEntity):
     """Fiftyfive Sensor class."""
 
     def __init__(
         self,
         coordinator: FiftyfiveDataUpdateCoordinator,
         entity_description: SensorEntityDescription,
-        idx: str,
+        charger_idx: str,
     ) -> None:
         """Initialize the sensor class."""
-        super().__init__(coordinator, idx)
+        super().__init__(coordinator, charger_idx)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{idx}_{entity_description.key}"
+        self._attr_unique_id = f"{charger_idx}_{entity_description.key}"
 
     @property
     def native_value(self) -> str | None:
         """Return the native value of the sensor."""
-        return self.entity_description.value_fn(self.network)
+        return self.entity_description.value_fn(self.charger)
+
+
+class FiftyfiveChannelSensor(FiftyfiveChannelEntity, SensorEntity):
+    """Fiftyfive Sensor class."""
+
+    def __init__(
+        self,
+        coordinator: FiftyfiveDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+        charger_idx: str,
+        channel_idx: str,
+        parent_device_id: str,
+    ) -> None:
+        """Initialize the sensor class."""
+        super().__init__(coordinator, charger_idx, channel_idx, parent_device_id)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{charger_idx}_{channel_idx}_{entity_description.key}"
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the native value of the sensor."""
+        return self.entity_description.value_fn(self.channel)

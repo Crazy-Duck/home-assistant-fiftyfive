@@ -5,9 +5,7 @@
                 "description": "Configureer je 50five account. [Leer meer.]({docs_url})",
                 "data": {
                     "username": "Gebruikersnaam",
-                    "password": "Paswoord",
-                    "country": "Markt",
-                    "customer_type": "Type klant"
+                    "password": "Paswoord"
                 }
             },
             "reauth": {
@@ -18,28 +16,10 @@
             }
         },
         "error": {
-            "auth": "Ongeldige inloggegevens/markt."
+            "auth": "Ongeldige inloggegevens."
         },
         "abort": {
-            "already_configured": "Deze combinatie is al configureerd."
-        }
-    },
-    "selector": {
-        "country": {
-            "options": {
-                "at": "Oostenrijk",
-                "belux": "België/Luxemburg",
-                "de": "Duitsland",
-                "fr": "Frankrijk",
-                "nl": "Nederland",
-                "uk": "Verenigd Koninkrijk"
-            }
-        },
-        "customer_type": {
-            "options": {
-                "fiftyfive": "50five",
-                "shell": "Voormalig Shell"
-            }
+            "already_configured": "Deze combinatie is al geconfigureerd."
         }
     },
     "entity": {
@@ -53,28 +33,19 @@
             "unlock": {
                 "name": "Ontgrendelen"
             },
-            "block": {
-                "name": "Blokkeren"
-            },
-            "unblock": {
-                "name": "Deblokkeren"
+            "stop": {
+                "name": "Stop laadsessie"
             }
         },
         "sensor": {
-            "power_draw": {
-                "name": "Stroomverbruik"
-            },
-            "transaction_energy_delivered": {
-                "name": "Energie geleverd tijdens transactie"
-            },
-            "transaction_duration": {
-                "name": "Transactie duur"
-            },
-            "transaction_card": {
-                "name": "Laadkaart in gebruik"
-            },
             "status": {
+                "name": "Connector status"
+            },
+            "charger_status": {
                 "name": "Lader status"
+            },
+            "hcc_tariff": {
+                "name": "Compensatie tarief"
             }
         }
     },
@@ -130,26 +101,6 @@
                 "device": {
                     "name": "Charger",
                     "description": "De laadpaal waarvan de connector ontgrendeld moet worden."
-                }
-            }
-        },
-        "block_charger": {
-            "name": "Blokkeer een laadpaal",
-            "description": "Maak een laadpaal onbeschikbaar.",
-            "fields": {
-                "device": {
-                    "name": "Charger",
-                    "description": "De laadpaal die geblokkeerd moet worden."
-                }
-            }
-        },
-        "unblock_charger": {
-            "name": "Deblokkeer een laadpaal",
-            "description": "Maak een geblokkeerde laadpaal terug beschikbaar.",
-            "fields": {
-                "device": {
-                    "name": "Charger",
-                    "description": "De laadpaal die gedeblokkeerd moet worden."
                 }
             }
         }

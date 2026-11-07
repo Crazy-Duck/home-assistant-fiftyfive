@@ -5,9 +5,7 @@
                 "description": "Configurez votre compte 50five: [Savoir plus.]({docs_url})",
                 "data": {
                     "username": "Nom d'utilisateur",
-                    "password": "Mot de passe",
-                    "country": "Région",
-                    "customer_type": "Type de client"
+                    "password": "Mot de passe"
                 }
             },
             "reauth": {
@@ -18,28 +16,10 @@
             }
         },
         "error": {
-            "auth": "Erreur sur l'identifiant ou la région."
+            "auth": "Erreur sur l'identifiant."
         },
         "abort": {
             "already_configured": "Cette combinaison est déjà configurée."
-        }
-    },
-    "selector": {
-        "country": {
-            "options": {
-                "at": "Autriche",
-                "belux": "Belgique/Luxembourg",
-                "de": "Allemagne",
-                "fr": "France",
-                "nl": "Pays-Bas",
-                "uk": "Royaume-Uni"
-            }
-        },
-        "customer_type": {
-            "options": {
-                "fiftyfive": "50five",
-                "shell": "Ancien client Shell"
-            }
         }
     },
     "entity": {
@@ -53,28 +33,19 @@
             "unlock": {
                 "name": "Déverrouillez"
             },
-            "block": {
-                "name": "Bloquer"
-            },
-            "unblock": {
-                "name": "Débloquer"
+            "stop": {
+                "name": "Arrêter la recharge"
             }
         },
         "sensor": {
-            "power_draw": {
-                "name": "Puissance absorbée"
-            },
-            "transaction_energy_delivered": {
-                "name": "Énergie délivrée lors de la recharge"
-            },
-            "transaction_duration": {
-                "name": "Durée de la recharge"
-            },
-            "transaction_card": {
-                "name": "Carte utilisée"
-            },
             "status": {
-                "name": "Etat de la borne"
+                "name": "État du connecteur"
+            },
+            "charger_status": {
+                "name": "État de la borne"
+            },
+            "hcc_tariff": {
+                "name": "Tarif de compensation"
             }
         }
     },
@@ -130,26 +101,6 @@
                 "device": {
                     "name": "Borne",
                     "description": "Le connecteur à déverrouillez."
-                }
-            }
-        },
-        "block_charger": {
-            "name": "Bloquer une borne",
-            "description": "Empêcher l'utilisation d'une borne.",
-            "fields": {
-                "device": {
-                    "name": "Borne",
-                    "description": "Borne à bloquer."
-                }
-            }
-        },
-        "unblock_charger": {
-            "name": "Débloquer une borne",
-            "description": "Autoriser la réutilisation d'une borne bloqué.",
-            "fields": {
-                "device": {
-                    "name": "Borne",
-                    "description": "Borne à débloquer."
                 }
             }
         }
