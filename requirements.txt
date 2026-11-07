@@ -3,6 +3,6 @@ homeassistant==2026.11.0
 fiftyfive==1.0.0
 pip==26.3
 pre-commit==4.6.2
-python-slugify==8.0.4
+python-slugify==9.1.3
 ruff==0.16.7
 sqglc==18
