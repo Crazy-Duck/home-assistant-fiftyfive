@@ -95,3 +95,9 @@ the following sensors and actions:
 Depending how the API evolves, these might come back (there is already a
 promising lmsActiveTransaction field, which unfortunately only returns an
 empty transaction) at which point I'll re-add them.
+
+# Starting a transaction
+
+The integration is now fully compatible with multi-channel chargers, this does
+however mean that starting a session is now an action that should be executed
+on a __channel__, not on the charger.
