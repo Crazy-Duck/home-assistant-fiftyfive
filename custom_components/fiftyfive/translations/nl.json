@@ -41,6 +41,9 @@
             "status": {
                 "name": "Connector status"
             },
+            "detailed_status": {
+                "name": "Detail status"
+            },
             "charger_status": {
                 "name": "Lader status"
             },

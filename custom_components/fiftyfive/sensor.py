@@ -58,6 +58,11 @@ CHANNEL_ENTITY_DESCRIPTIONS = (
         translation_key="status",
         value_fn=lambda channel: channel.global_status,
     ),
+    FiftyfiveSensorEntityDescription(
+        key="detailed_status",
+        translation_key="detailed_status",
+        value_fn=lambda channel: channel.statuses[0] if channel.statuses else None,
+    ),
 )
 
 

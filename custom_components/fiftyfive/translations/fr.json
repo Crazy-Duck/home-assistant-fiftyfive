@@ -41,6 +41,9 @@
             "status": {
                 "name": "État du connecteur"
             },
+            "detailed_status": {
+                "name": "État détaillé"
+            },
             "charger_status": {
                 "name": "État de la borne"
             },

@@ -41,6 +41,9 @@
             "status": {
                 "name": "Channel status"
             },
+            "detailed_status": {
+                "name": "Detailed status"
+            },
             "charger_status": {
                 "name": "Charger status"
             },
