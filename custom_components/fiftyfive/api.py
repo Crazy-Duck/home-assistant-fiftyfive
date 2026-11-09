@@ -94,7 +94,7 @@ class FiftyfiveApiClient:
             raise FiftyfiveApiInvalidCardError
 
         card_list = (op + data).get_cards
-        card = next((card for card in card_list if card.external_id == card_id), None)
+        card = next((c for c in card_list.items if c.external_id == card_id), None)
         if card is None:
             raise FiftyfiveApiInvalidCardError
 
