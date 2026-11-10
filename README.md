@@ -101,3 +101,6 @@ empty transaction) at which point I'll re-add them.
 The integration is now fully compatible with multi-channel chargers, this does
 however mean that starting a session is now an action that should be executed
 on a __channel__, not on the charger.
+
+As this implementation is based on a relatively new feature of Home Assistant,
+make sure to update your Home Assistant to 2026.11.0 to avoid any issues.
